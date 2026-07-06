@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>My English Coach</title>
+<style>
+  :root{
+    --bg:#f6efe3; --card:#fdf9f0; --ink:#37413a; --sub:#83786a;
+    --accent:#2f7d5c; --terra:#c4502a; --ok:#2f7d5c; --ng:#c4502a;
+    --line:#e6dbc4; --gold:#b97f10; --gold-bg:#f6e7c2;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+       background:var(--bg); color:var(--ink); line-height:1.6;}
+  #wrap{max-width:480px; margin:0 auto; padding:16px 16px 48px;}
+  header{text-align:center; padding:20px 0 18px;}
+  header h1{font-family:Georgia,"Times New Roman","Hiragino Mincho ProN",serif;
+            font-size:22px; margin:0; font-weight:600; color:var(--accent);
+            letter-spacing:3px;}
+  .tagline{font-size:11px; letter-spacing:2.5px; color:var(--terra); margin-top:4px;}
+  #streak{display:inline-block; font-size:13px; font-weight:600; color:var(--gold);
+          background:var(--gold-bg); padding:4px 14px; border-radius:999px; margin-top:12px;}
+  .arch{width:92px; height:58px; margin:0 auto 12px;
+        border:1.5px solid var(--accent); border-bottom:none;
+        border-radius:92px 92px 0 0; opacity:.85;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 21px, rgba(47,125,92,.55) 21px 22.5px),
+          linear-gradient(to top, rgba(196,80,42,.12), rgba(233,166,32,.10));}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px;
+        padding:20px; margin-bottom:14px; box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .card h2{font-size:15px; margin:0 0 8px; color:var(--sub); font-weight:600;}
+  .big-en{font-size:19px; font-weight:600; line-height:1.5;}
+  .en{font-family:Georgia,"Times New Roman",serif; font-size:20px; letter-spacing:.2px;}
+  .missw{color:var(--terra); border-bottom:2px solid var(--terra);}
+  .ja{font-size:15px; color:var(--sub); margin-top:6px;}
+  .note{font-size:13px; color:var(--accent); background:#e9f0e4; border-radius:8px;
+        padding:8px 12px; margin-top:10px;}
+  .tag{display:inline-block; font-size:12px; background:var(--gold-bg); color:var(--gold);
+       padding:2px 10px; border-radius:999px; margin-bottom:8px;}
+  .tag.rev{background:#f4ddd0; color:var(--terra);}
+  button{font-family:inherit; border:none; border-radius:12px; cursor:pointer;
+         font-size:16px; font-weight:600; padding:14px 18px; width:100%; margin-top:10px;}
+  button:disabled{opacity:.45; cursor:default;}
+  .btn-main{background:var(--accent); color:#fdf9f0;}
+  .btn-sub{background:#e9f0e4; color:var(--accent);}
+  .btn-ghost{background:transparent; color:var(--sub); border:1px solid var(--line);}
+  .btn-ok{background:#dfeadb; color:var(--ok);}
+  .btn-ng{background:#f4ddd0; color:var(--ng);}
+  .row{display:flex; gap:10px;} .row button{margin-top:10px;}
+  .mrow{display:flex; align-items:center; gap:12px; margin-top:14px;}
+  .mrow .mi{flex:1;} .mrow .mi b{font-size:15px;}
+  .mrow button{width:auto; margin:0; padding:10px 20px; font-size:14px; flex-shrink:0;}
+  .pbar{height:6px; background:#ece4d0; border-radius:999px; margin-top:16px; overflow:hidden;}
+  .pbar i{display:block; height:100%; width:0%; background:var(--accent);
+          border-radius:999px; transition:width .3s;}
+  textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:12px;
+           font-size:16px; font-family:inherit; min-height:72px; margin-top:10px; background:#fffdf8;}
+  select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--line);
+         font-size:15px; background:#fffdf8; margin-top:6px;}
+  .prog{font-size:13px; color:var(--sub); font-weight:600; margin-bottom:8px;}
+  .hide{display:none;}
+  .center{text-align:center;}
+  label{font-size:13px; color:var(--sub); font-weight:600; display:block; margin-top:12px;}
+  .small{font-size:13px; color:var(--sub); margin-top:8px;}
+  .stats{display:flex; gap:8px; margin-bottom:12px;}
+  .stat{flex:1; text-align:center; background:#f7f2e4; border:1px solid var(--line);
+        border-radius:12px; padding:10px 4px;}
+  .stat b{display:block; font-size:20px; color:var(--accent);}
+  .stat span{font-size:12px; color:var(--sub);}
+  .cal{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .cal div{text-align:center; font-size:12px; padding:6px 0; border-radius:8px; color:var(--sub);}
+  .cal .wd{font-weight:600; padding:2px 0;}
+  .cal .done{background:var(--accent); color:#fff; font-weight:600;}
+  .cal .today{outline:2px solid var(--accent); outline-offset:-2px;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <div class="arch"></div>
+    <h1>MY ENGLISH COACH</h1>
+    <div class="tagline">ENGLISH FOR WORKING SPACES</div>
+    <div id="streak">連続 0日</div>
+  </header>
+
+  <!-- HOME -->
+  <section id="v-home">
+    <div class="card">
+      <h2>今日のメニュー — 隙間時間に小分けでOK</h2>
+      <div class="mrow">
+        <div class="mi"><b>ディクテーション &amp; シャドーイング</b>
+          <div class="small" style="margin-top:0">1文 約2分 — <span id="mp-d">0/3</span></div></div>
+        <button class="btn-main" id="btn-d" onclick="startDict()">やる</button>
+      </div>
+      <div class="mrow">
+        <div class="mi"><b>瞬間英作文</b>
+          <div class="small" style="margin-top:0">1問 約20秒 — <span id="mp-q">0/10</span></div></div>
+        <button class="btn-main" id="btn-q" onclick="startQT()">やる</button>
+      </div>
+      <div class="pbar"><i id="pb"></i></div>
+      <div class="small">1文終えた時点で、その日はカレンダーに記録されます。疲れた日はそれだけで十分です。</div>
+      <div class="small" id="voice-hint"></div>
+    </div>
+    <div class="card">
+      <h2 id="rec-title">きろく</h2>
+      <div class="stats">
+        <div class="stat"><b id="st-streak">0</b><span>連続日数</span></div>
+        <div class="stat"><b id="st-month">0</b><span>今月</span></div>
+        <div class="stat"><b id="st-total">0</b><span>累計</span></div>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="small">連続が途切れても、塗った日は消えません。ゼロの日を減らすことがすべてです。</div>
+    </div>
+    <div class="card">
+      <h2>設定</h2>
+      <label>音声(アクセント)— 毎日変えるのがおすすめ</label>
+      <select id="voice-sel"></select>
+      <label>スピード</label>
+      <select id="rate-sel">
+        <option value="0.75">ゆっくり (0.75x)</option>
+        <option value="0.9" selected>標準よりやや遅め (0.9x)</option>
+        <option value="1.0">ナチュラル (1.0x)</option>
+        <option value="1.15">速め (1.15x)</option>
+      </select>
+      <div class="small">※音が出ない場合はマナーモードを解除してください(iPhone)</div>
+    </div>
+  </section>
+
+  <!-- DICTATION -->
+  <section id="v-dict" class="hide">
+    <div class="card">
+      <div class="prog" id="d-prog"></div>
+      <h2>① 聞いて書き取る(何回聞いてもOK)</h2>
+      <div class="row">
+        <button class="btn-main" onclick="playCur(1)">再生</button>
+        <button class="btn-sub" onclick="playCur(0.7)">ゆっくり</button>
+      </div>
+      <textarea id="d-input" placeholder="聞こえた英語を入力(だいたいでOK)" autocapitalize="off" autocorrect="off"></textarea>
+      <button class="btn-ghost" id="d-reveal-btn" onclick="revealD()">答え合わせ</button>
+      <div id="d-answer" class="hide">
+        <div class="big-en en" id="d-en"></div>
+        <div class="small" id="d-score"></div>
+        <div class="ja" id="d-ja"></div>
+        <div class="note" id="d-note"></div>
+        <h2 style="margin-top:16px">② シャドーイング — ボタンを押すたびに音が流れます。重ねて声に出す×5回</h2>
+        <button class="btn-sub" id="sh-btn" onclick="shPlay()">再生してシャドーイング (0/5)</button>
+        <button class="btn-main" onclick="finishDictItem()">この文を終える →</button>
+      </div>
+    </div>
+    <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
+  </section>
+
+  <!-- QUICK TRANSLATION -->
+  <section id="v-qt" class="hide">
+    <div class="card">
+      <div class="prog" id="q-prog"></div>
+      <h2>瞬間英作文 — 3秒以内に声に出す</h2>
+      <div class="tag" id="q-tag"></div>
+      <div class="big-en" id="q-ja"></div>
+      <button class="btn-ghost" id="q-reveal-btn" onclick="revealQ()">答えを見る</button>
+      <div id="q-answer" class="hide">
+        <div class="big-en en" style="color:var(--accent)" id="q-en"></div>
+        <button class="btn-sub" onclick="playText(qItem.e)">発音を聞く</button>
+        <div class="row">
+          <button class="btn-ok" onclick="gradeQ(true)">言えた ○</button>
+          <button class="btn-ng" onclick="gradeQ(false)">言えなかった ×</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
+  </section>
+
+  <!-- BREAK / DONE -->
+  <section id="v-break" class="hide">
+    <div class="card center">
+      <div class="big-en" id="bk-title"></div>
+      <div class="ja" id="bk-sub"></div>
+      <div id="bk-miss" class="note hide" style="text-align:left"></div>
+      <div id="bk-btns"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+/* ================= データ ================= */
+const D = [
+{e:"We're gonna have to push the rollout back a week because the vendor's dragging their feet.", j:"ベンダーがもたついているので、ロールアウトを1週間遅らせないといけません。", n:"gonna=going to / push back=延期する / drag one's feet=もたつく"},
+{e:"Could you loop in the Tokyo team by end of day?", j:"今日中に東京チームを巻き込んでもらえますか?", n:"loop in=(メール等に)巻き込む / by end of day=今日中に"},
+{e:"Let's take this offline and set up a separate call.", j:"この件は会議の外で話すことにして、別途通話を設定しましょう。", n:"take ~ offline=その場では議論せず別途話す(会議頻出)"},
+{e:"I didn't quite catch that. Could you say it again?", j:"よく聞き取れませんでした。もう一度言ってもらえますか?", n:"catch=聞き取る。聞き返しの最重要フレーズ"},
+{e:"We're running out of time, so let's move on to the next item.", j:"時間がなくなってきたので、次の議題に移りましょう。", n:"run out of=尽きる / move on to=移る。running outの連結に注意"},
+{e:"The numbers don't add up, so I'll double-check them and get back to you.", j:"数字が合わないので、再確認して折り返します。", n:"add up=計算が合う / get back to you=折り返す"},
+{e:"Can everyone see my screen, or is it still loading?", j:"皆さん画面見えていますか?まだ読み込み中ですか?", n:"画面共有の定番。or is itの弱形に注意"},
+{e:"If it's okay with everyone, I'd like to wrap up five minutes early.", j:"皆さんが良ければ5分早く終わりたいのですが。", n:"wrap up=切り上げる・まとめる"},
+{e:"We should've flagged this issue much earlier.", j:"この問題はもっと早く報告すべきでした。", n:"should've=should have(シュダヴ) / flag=問題を知らせる"},
+{e:"I'll send out the minutes right after the meeting.", j:"会議の直後に議事録を送ります。", n:"minutes=議事録(分ではない!)"},
+{e:"There's a bit of a bottleneck on the approval side.", j:"承認まわりが少しボトルネックになっています。", n:"a bit of aの連結(アビロヴァ)に注意"},
+{e:"Sorry to interrupt, but could we go back to the previous slide?", j:"割り込んですみません、前のスライドに戻れますか?", n:"Sorry to interrupt=会議で発言に割り込む時の定番"},
+{e:"It might be worth getting legal involved before we sign off.", j:"承認する前に法務を入れる価値があるかもしれません。", n:"worth -ing=~する価値がある / sign off=承認する"},
+{e:"The pilot went better than expected, so we're scaling it up next quarter.", j:"パイロットが予想以上にうまくいったので、来四半期に拡大します。", n:"scale up=拡大する / than expectedの弱形"},
+{e:"Heads up — the deadline's been moved up to Friday.", j:"注意です。締切が金曜に前倒しになりました。", n:"heads up=事前連絡 / move up=前倒し(push backの逆)"},
+{e:"I'm afraid we're talking past each other. Let me rephrase.", j:"話が噛み合っていないようです。言い直しますね。", n:"talk past each other=話が噛み合わない / rephrase=言い換える"},
+{e:"Can we park that for now and come back to it later?", j:"その件は一旦保留にして、後で戻ってもいいですか?", n:"park=一時保留にする(会議頻出)"},
+{e:"Rolling this out globally will take at least six months.", j:"これをグローバル展開するには最低6ヶ月かかります。", n:"roll out=展開する。動名詞主語の形に注意"},
+{e:"We can't afford another delay, so let's lock down the scope today.", j:"これ以上の遅延は許されないので、今日スコープを確定しましょう。", n:"can't afford=余裕がない / lock down=確定させる"},
+{e:"Would it help if I walked you through the process step by step?", j:"プロセスを順を追って説明しましょうか?", n:"walk you through=順に説明する(超頻出)"},
+{e:"The budget's tight, but I think we can make it work.", j:"予算は厳しいですが、なんとかできると思います。", n:"tight=厳しい / make it work=なんとかする"},
+{e:"Let me play devil's advocate for a second.", j:"あえて反対の立場から言わせてください。", n:"play devil's advocate=議論のためにあえて反論する"},
+{e:"He's out of office this week, so I'm covering for him.", j:"彼は今週不在なので、私が代わりを務めています。", n:"out of office=不在 / cover for=代行する"},
+{e:"It turns out the issue was on our end, not the vendor's.", j:"実は問題はベンダーではなくこちら側にありました。", n:"it turns out=実は~だと判明 / on our end=こちら側"},
+{e:"Long story short, we're going with option B.", j:"要するに、オプションBで行くことにしました。", n:"long story short=要するに / go with=採用する"},
+{e:"Feel free to jump in if you have any questions.", j:"質問があれば遠慮なく割り込んでください。", n:"jump in=会話に入る。会議のファシリで頻出"},
+{e:"We need a rough estimate by Wednesday. A ballpark figure is fine.", j:"水曜までにざっくりした見積もりが必要です。概算で構いません。", n:"ballpark figure=概算(超頻出)"},
+{e:"I'll follow up with an email summarizing the action items.", j:"アクションアイテムをまとめたメールをこの後送ります。", n:"follow up with=~で追って連絡する"},
+{e:"That's a fair point, but I see it a little differently.", j:"もっともな指摘ですが、私は少し違う見方をしています。", n:"fair point=もっともな指摘。反論の前置きに"},
+{e:"Do you have the bandwidth to take this on?", j:"これを引き受ける余裕はありますか?", n:"bandwidth=(人の)余裕・キャパ / take on=引き受ける"},
+{e:"Let's not reinvent the wheel. We can reuse last year's framework.", j:"車輪の再発明はやめましょう。去年のフレームワークを再利用できます。", n:"reinvent the wheel=すでにあるものを作り直す無駄"},
+{e:"The demo kept crashing, so we had to fall back on the slides.", j:"デモが落ち続けたので、スライドで代用せざるを得ませんでした。", n:"kept -ing=~し続けた / fall back on=代替に頼る"},
+{e:"If he hadn't disagreed, this project would have moved a lot faster.", j:"彼が反対していなければ、このプロジェクトはもっと早く進んでいたでしょう。", n:"仮定法過去完了(B2の関門)。would'veの音に注意"},
+{e:"I'd rather we didn't commit to a date until the testing's done.", j:"テストが終わるまでは日程を確約しないほうがいいと思います。", n:"I'd rather we didn't=~しないほうがいい(丁寧な反対)"},
+{e:"Something came up, so I might be five minutes late to the next call.", j:"急用ができたので、次の会議に5分遅れるかもしれません。", n:"something came up=急用ができた(定番の言い訳)"},
+{e:"Could you break down the costs by region?", j:"コストを地域別に分けてもらえますか?", n:"break down=分解する / by region=地域別に"},
+{e:"We're still waiting on sign-off from the security team.", j:"まだセキュリティチームの承認待ちです。", n:"wait on=~を待つ / sign-off=承認"},
+{e:"To be honest, I have mixed feelings about outsourcing this.", j:"正直、これを外注することには複雑な気持ちです。", n:"mixed feelings=複雑な心境"},
+{e:"Whatever we decide, we should keep the stakeholders in the loop.", j:"何を決めるにせよ、ステークホルダーには常に共有すべきです。", n:"keep ~ in the loop=常に情報共有する"},
+{e:"Off the top of my head, I'd say around twenty percent.", j:"ぱっと思いつく限りでは、20%くらいですね。", n:"off the top of my head=即答で・うろ覚えで"},
+{e:"Let's circle back once we have the Q3 numbers.", j:"Q3の数字が出たら、またこの話に戻りましょう。", n:"circle back=後で戻る(会議頻出)"},
+{e:"Are we all on the same page about the timeline?", j:"タイムラインについて認識は揃っていますか?", n:"on the same page=認識が一致している"}
+];
+
+const Q = [
+{j:"弊社には世界中にたくさんのオフィスがあります。", e:"Our company has many offices around the world.", t:"一致・複数"},
+{j:"スケジュールにいくつか変更があります。", e:"There are some changes in the schedule.", t:"一致・複数"},
+{j:"彼は毎朝すべてのメールをチェックします。", e:"He checks all his emails every morning.", t:"三単現"},
+{j:"各オフィスに担当者が1人います。", e:"There is one person in charge at each office.", t:"一致・複数"},
+{j:"多くの社員がこのツールを毎日使っています。", e:"A lot of employees use this tool every day.", t:"一致・複数"},
+{j:"このチームにはエンジニアが5人います。", e:"There are five engineers on this team.", t:"一致・複数"},
+{j:"彼女はまだその変更に気づいていません。", e:"She isn't aware of the change yet.", t:"三単現・前置詞"},
+{j:"うちの部署は3つのプロジェクトを抱えています。", e:"Our department has three projects.", t:"一致"},
+{j:"今日中にそのレポートを送ります。", e:"I'll send you the report by end of day.", t:"前置詞"},
+{j:"その件は田中さんに確認して折り返します。", e:"I'll check with Tanaka-san and get back to you.", t:"前置詞"},
+{j:"これは実際の業務でAIを活用するための良いアイデアです。", e:"This is a good idea for using AI in actual business situations.", t:"前置詞・冠詞"},
+{j:"会議は10時に始まります。", e:"The meeting starts at ten.", t:"冠詞・三単現"},
+{j:"私はIT部門で働いています。", e:"I work in the IT department.", t:"冠詞・前置詞"},
+{j:"その問題については金曜日に話しましょう。", e:"Let's talk about the issue on Friday.", t:"前置詞"},
+{j:"結果は来週の月曜までに共有します。", e:"I'll share the results by next Monday.", t:"前置詞"},
+{j:"彼は今、別の会議に出ています。", e:"He's in another meeting right now.", t:"冠詞"},
+{j:"その資料をまだ受け取っていません。", e:"I haven't received the material yet.", t:"現在完了・語順"},
+{j:"その件はもう対応済みです。", e:"We've already taken care of it.", t:"現在完了"},
+{j:"先週お送りしたファイルはご覧いただけましたか?", e:"Have you had a chance to look at the file I sent last week?", t:"現在完了・関係詞"},
+{j:"今、原因を調査しているところです。", e:"We're looking into the cause right now.", t:"時制"},
+{j:"3年前からこの会社で働いています。", e:"I've been working at this company for three years.", t:"現在完了"},
+{j:"彼が反対していなければ、プロジェクトはもっと早く進んでいたでしょう。", e:"If he hadn't disagreed, the project would have moved much faster.", t:"仮定法"},
+{j:"その問題はもっと早く報告すべきでした。", e:"We should have reported the issue much earlier.", t:"should have"},
+{j:"もっと時間があれば、全案件をレビューできるのですが。", e:"If we had more time, we could review all the cases.", t:"仮定法"},
+{j:"予算が足りなければ、範囲を狭めるべきだと思います。", e:"If the budget isn't enough, I think we should narrow the scope.", t:"条件文"},
+{j:"私もその会議に参加できていたらよかったのですが。", e:"I wish I could have joined that meeting.", t:"wish"},
+{j:"会議の機会がもっと増えるといいと思っています。", e:"I hope we'll have more opportunities for meetings.", t:"wish/hope"},
+{j:"プロジェクトがうまくいくことを願っています。", e:"I hope the project goes well.", t:"wish/hope・三単現"},
+{j:"画面を共有させてください。", e:"Let me share my screen.", t:"会議定型"},
+{j:"すみません、聞き取れませんでした。もう一度お願いできますか?", e:"Sorry, I didn't catch that. Could you say that again?", t:"会議定型"},
+{j:"もう少し詳しく説明していただけますか?", e:"Could you elaborate on that a little more?", t:"会議定型"},
+{j:"次の議題に移りましょう。", e:"Let's move on to the next item.", t:"会議定型"},
+{j:"その件は一旦保留にして、後で戻りましょう。", e:"Let's park that for now and come back to it later.", t:"会議定型"},
+{j:"ご質問があれば遠慮なく割り込んでください。", e:"Feel free to jump in if you have any questions.", t:"会議定型"},
+{j:"議事録は会議の後すぐに送ります。", e:"I'll send out the minutes right after the meeting.", t:"会議定型"},
+{j:"東京チームにも共有してもらえますか?", e:"Could you loop in the Tokyo team?", t:"会議定型"},
+{j:"時間がなくなってきたので、まとめに入りましょう。", e:"We're running out of time, so let's wrap up.", t:"会議定型"},
+{j:"おっしゃることはもっともですが、私は少し違う見方をしています。", e:"That's a fair point, but I see it a little differently.", t:"会議定型"},
+{j:"ざっくりした見積もりで構いません。", e:"A ballpark figure is fine.", t:"会議定型・冠詞"},
+{j:"その作業を引き受ける余裕はありますか?", e:"Do you have the bandwidth to take that on?", t:"会議定型"}
+];
+
+/* ================= 基本ヘルパー ================= */
+let dItem=null, qItem=null, shCount=0;
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dayNum(){const d=new Date();return Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);}
+
+/* 復習バンク: ×だった英作文のQインデックスを、○が出るまで持ち続ける */
+function getBank(){try{return JSON.parse(localStorage.getItem("mec_missbank")||"[]");}catch(e){return [];}}
+function saveBank(b){localStorage.setItem("mec_missbank",JSON.stringify(b));}
+
+function newProg(){
+  const carry=getBank().slice(0,3);           // 昨日までの×を最大3問、今日の頭に混ぜる
+  const list=[...carry];
+  const dn=dayNum(); let i=0;
+  while(list.length<10 && i<200){
+    const idx=(dn*13+i*3)%Q.length;
+    if(!list.includes(idx)) list.push(idx);
+    i++;
+  }
+  return {date:todayStr(), d:0, q:0, miss:[], qlist:list};
+}
+function loadProg(){
+  try{
+    const p=JSON.parse(localStorage.getItem("mec_prog")||"null");
+    if(p && p.date===todayStr() && Array.isArray(p.qlist)) return p;
+  }catch(e){}
+  const p=newProg(); saveProg(p); return p;
+}
+function saveProg(p){localStorage.setItem("mec_prog",JSON.stringify(p));}
+
+/* ================= 音声 ================= */
+function enVoices(){return window.speechSynthesis?speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith("en")):[];}
+function populateVoices(){
+  const sel=document.getElementById("voice-sel");
+  const vs=enVoices();
+  if(!vs.length){sel.innerHTML="<option>音声が見つかりません</option>";return;}
+  const saved=localStorage.getItem("mec_voice");
+  sel.innerHTML=vs.map(v=>`<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
+  if(saved && vs.some(v=>v.name===saved)) sel.value=saved;
+  sel.onchange=()=>localStorage.setItem("mec_voice",sel.value);
+  const day=new Date().getDay();
+  const rec=["en-US","en-GB","en-AU","en-IN","en-US","en-GB","en-IE"][day];
+  const hint=vs.find(v=>v.lang.replace("_","-").startsWith(rec));
+  document.getElementById("voice-hint").textContent=hint?`今日のおすすめアクセント: ${hint.name} (${rec})`:"";
+}
+function playText(text, rateScale=1){
+  if(!window.speechSynthesis) return alert("この環境は音声合成に対応していません");
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const sel=document.getElementById("voice-sel");
+  const v=enVoices().find(x=>x.name===sel.value);
+  if(v) u.voice=v;
+  u.rate=parseFloat(document.getElementById("rate-sel").value)*rateScale;
+  speechSynthesis.speak(u);
+}
+function playCur(rateScale){if(dItem) playText(dItem.e, rateScale);}
+function stopAudio(){if(window.speechSynthesis) speechSynthesis.cancel();}
+
+/* ================= きろく ================= */
+function getDays(){try{return JSON.parse(localStorage.getItem("mec_days")||"[]");}catch(e){return [];}}
+function loadStreak(){
+  const s=parseInt(localStorage.getItem("mec_streak")||"0");
+  document.getElementById("streak").textContent="連続 "+s+"日";
+  return s;
+}
+function completeDay(){
+  const today=todayStr(), last=localStorage.getItem("mec_last");
+  const days=getDays();
+  if(!days.includes(today)){days.push(today);localStorage.setItem("mec_days",JSON.stringify(days));}
+  if(last!==today){
+    const y=new Date(); y.setDate(y.getDate()-1);
+    const yStr=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+    let s=parseInt(localStorage.getItem("mec_streak")||"0");
+    s=(last===yStr)?s+1:1;
+    localStorage.setItem("mec_streak",String(s));
+    localStorage.setItem("mec_last",today);
+  }
+  renderRecord();
+  return loadStreak();
+}
+function renderRecord(){
+  const days=getDays(), now=new Date(), Y=now.getFullYear(), M=now.getMonth();
+  const mPrefix=Y+"-"+String(M+1).padStart(2,"0");
+  document.getElementById("rec-title").textContent="きろく — "+Y+"年"+(M+1)+"月";
+  document.getElementById("st-streak").textContent=localStorage.getItem("mec_streak")||"0";
+  document.getElementById("st-month").textContent=days.filter(d=>d.startsWith(mPrefix)).length;
+  document.getElementById("st-total").textContent=days.length;
+  const cal=document.getElementById("cal");
+  let html=["日","月","火","水","木","金","土"].map(w=>`<div class="wd">${w}</div>`).join("");
+  const first=new Date(Y,M,1).getDay(), nDays=new Date(Y,M+1,0).getDate(), today=todayStr();
+  for(let i=0;i<first;i++) html+="<div></div>";
+  for(let d=1;d<=nDays;d++){
+    const ds=mPrefix+"-"+String(d).padStart(2,"0");
+    const cls=(days.includes(ds)?"done ":"")+(ds===today?"today":"");
+    html+=`<div class="${cls.trim()}">${d}</div>`;
+  }
+  cal.innerHTML=html;
+}
+
+/* ================= 画面制御 ================= */
+function show(id){["v-home","v-dict","v-qt","v-break"].forEach(v=>document.getElementById(v).classList.toggle("hide",v!==id));window.scrollTo(0,0);}
+function renderHome(){
+  const p=loadProg();
+  document.getElementById("mp-d").textContent=p.d+"/3";
+  document.getElementById("mp-q").textContent=p.q+"/10";
+  document.getElementById("pb").style.width=Math.round((p.d+p.q)/13*100)+"%";
+  const bd=document.getElementById("btn-d"), bq=document.getElementById("btn-q");
+  bd.disabled=(p.d>=3); bd.textContent=(p.d>=3)?"完了":"やる";
+  bq.disabled=(p.q>=10); bq.textContent=(p.q>=10)?"完了":"やる";
+}
+function goHome(){renderHome(); show("v-home");}
+function quitToHome(){stopAudio(); goHome();}
+
+/* ---- ディクテーション(1文単位) ---- */
+function startDict(){
+  const p=loadProg();
+  if(p.d>=3) return goHome();
+  dItem=D[(dayNum()*5+p.d*7)%D.length];
+  shCount=0;
+  document.getElementById("d-prog").textContent=`ディクテーション ${p.d+1} / 3`;
+  document.getElementById("d-input").value="";
+  document.getElementById("d-answer").classList.add("hide");
+  document.getElementById("d-reveal-btn").classList.remove("hide");
+  show("v-dict");
+}
+function normWord(w){return w.toLowerCase().replace(/[^a-z0-9']/g,"");}
+function revealD(){
+  const typedRaw=document.getElementById("d-input").value.trim();
+  const enEl=document.getElementById("d-en"), scoreEl=document.getElementById("d-score");
+  if(typedRaw){
+    // 聞き逃した単語をテラコッタでハイライト
+    const heard=new Set(typedRaw.split(/\s+/).map(normWord).filter(Boolean));
+    const words=dItem.e.split(/\s+/);
+    let hit=0;
+    enEl.innerHTML=words.map(w=>{
+      const ok=heard.has(normWord(w));
+      if(ok) hit++;
+      return ok?w:`<span class="missw">${w}</span>`;
+    }).join(" ");
+    scoreEl.textContent=`聞き取れた語: ${hit} / ${words.length}(色付きが聞き逃し)`;
+  }else{
+    enEl.textContent=dItem.e;
+    scoreEl.textContent="";
+  }
+  document.getElementById("d-ja").textContent=dItem.j;
+  document.getElementById("d-note").textContent=dItem.n;
+  document.getElementById("d-answer").classList.remove("hide");
+  document.getElementById("d-reveal-btn").classList.add("hide");
+}
+function shPlay(){
+  playCur(1);
+  shCount=Math.min(5,shCount+1);
+  document.getElementById("sh-btn").textContent=
+    shCount>=5?"シャドーイング 5/5 — 完了":`再生してシャドーイング (${shCount}/5)`;
+}
+function finishDictItem(){
+  const p=loadProg(); p.d++; saveProg(p);
+  completeDay(); stopAudio();
+  if(p.d<3){
+    breakScreen("1文完了","今日はもう記録されました。続けても、ここでやめてもOKです。",
+      [["もう1文やる("+p.d+"/3)","startDict()","btn-main"],
+       ["瞬間英作文へ","startQT()","btn-sub"],
+       ["ホームへ","goHome()","btn-ghost"]]);
+  }else{
+    breakScreen("ディクテーション完了","残りは瞬間英作文だけです。隙間時間にどうぞ。",
+      [["瞬間英作文へ","startQT()","btn-main"],
+       ["ホームへ","goHome()","btn-ghost"]]);
+  }
+}
+
+/* ---- 瞬間英作文(1問単位・5問で区切り・×は翌日以降に再出題) ---- */
+function startQT(){
+  const p=loadProg();
+  if(p.q>=10) return goHome();
+  const idx=p.qlist[p.q];
+  qItem=Q[idx];
+  const isReview=getBank().includes(idx);
+  const tagEl=document.getElementById("q-tag");
+  tagEl.textContent=isReview?qItem.t+" / 復習":qItem.t;
+  tagEl.className=isReview?"tag rev":"tag";
+  document.getElementById("q-prog").textContent=`瞬間英作文 ${p.q+1} / 10`;
+  document.getElementById("q-ja").textContent=qItem.j;
+  document.getElementById("q-answer").classList.add("hide");
+  document.getElementById("q-reveal-btn").classList.remove("hide");
+  show("v-qt");
+}
+function revealQ(){
+  document.getElementById("q-en").textContent=qItem.e;
+  document.getElementById("q-answer").classList.remove("hide");
+  document.getElementById("q-reveal-btn").classList.add("hide");
+}
+function gradeQ(ok){
+  const p=loadProg();
+  const idx=p.qlist[p.q];
+  let bank=getBank();
+  if(ok){bank=bank.filter(x=>x!==idx);}
+  else{if(!bank.includes(idx)) bank.push(idx); p.miss.push(Q[idx].e);}
+  saveBank(bank);
+  p.q++; saveProg(p); stopAudio();
+  if(p.q>=10){
+    const okN=10-p.miss.length;
+    breakScreen("今日のメニュー、すべて完了","正解 "+okN+"/10。×だった文は明日の最初に再出題されます。",
+      [["ホームへ","goHome()","btn-main"]], p.miss);
+  }else if(p.q%5===0){
+    breakScreen("5問完了","残り5問。今やっても、あとの隙間時間でもOKです。",
+      [["つづける(あと5問)","startQT()","btn-main"],
+       ["ホームへ","goHome()","btn-ghost"]]);
+  }else{
+    startQT();
+  }
+}
+
+/* ---- 区切り画面 ---- */
+function breakScreen(title, sub, btns, miss){
+  document.getElementById("bk-title").textContent=title;
+  document.getElementById("bk-sub").textContent=sub;
+  const box=document.getElementById("bk-miss");
+  if(miss && miss.length){
+    box.innerHTML="<b>復習リスト(明日また出ます):</b><br>"+miss.map(m=>"・"+m).join("<br>");
+    box.classList.remove("hide");
+  }else box.classList.add("hide");
+  document.getElementById("bk-btns").innerHTML=
+    btns.map(b=>`<button class="${b[2]}" onclick="${b[1]}">${b[0]}</button>`).join("");
+  show("v-break");
+}
+
+/* ================= 初期化 ================= */
+loadStreak();
+renderRecord();
+renderHome();
+populateVoices();
+if(window.speechSynthesis) speechSynthesis.onvoiceschanged=populateVoices;
+</script>
+</body>
+</html>
