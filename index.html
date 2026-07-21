@@ -136,10 +136,15 @@
       <select id="voice-sel"></select>
       <label>ディクテーションのレベル</label>
       <select id="dlevel-sel">
-        <option value="easy">やさしめ — 基礎ビジネス表現 (50文)</option>
-        <option value="std" selected>標準 — やさしめ+定番表現 (100文)</option>
-        <option value="mix">ミックス — 全レベル (150文)</option>
-        <option value="hard">チャレンジ — イディオム中心 (50文)</option>
+        <option value="easy">やさしめ — 基礎ビジネス表現 (62文)</option>
+        <option value="std" selected>標準 — やさしめ+定番表現 (128文)</option>
+        <option value="mix">ミックス — 全レベル (190文)</option>
+        <option value="hard">チャレンジ — イディオム中心 (62文)</option>
+      </select>
+      <label>仕事関連の文(生成AI・Salesforce・DX)</label>
+      <select id="work-sel">
+        <option value="0">全体に自然に混ぜる</option>
+        <option value="1">優先して多めに出題する</option>
       </select>
       <label>スピード</label>
       <select id="rate-sel">
@@ -393,7 +398,49 @@ const D = [
 {e:"The internet is really slow this morning.", j:"今朝はネットがすごく遅いです。", n:"internetは「イナネッ」とtがほぼ消える", lv:1},
 {e:"Sorry, I sent you the wrong file.", j:"すみません、間違ったファイルを送ってしまいました。", n:"wrong=間違った / sent you=センチュ", lv:1},
 {e:"Let's start with a quick update from each team.", j:"まず各チームからの簡単な近況報告で始めましょう。", n:"start with=~から始める / update=近況報告", lv:1},
-{e:"That sounds good to me.", j:"それでいいと思います。", n:"sounds good=良さそう(同意の定番)。to me=私としては", lv:1}
+{e:"That sounds good to me.", j:"それでいいと思います。", n:"sounds good=良さそう(同意の定番)。to me=私としては", lv:1},
+
+/* --- 仕事関連: 生成AI戦略・ガバナンス / Salesforce・CADDi / DX人材育成 --- */
+{e:"We use AI tools to save time at work.", j:"私たちは仕事の時間を節約するためにAIツールを使っています。", n:"save time=時間を節約する / at work=職場で", lv:1, g:"work"},
+{e:"Please don't put customer data into AI tools.", j:"顧客データをAIツールに入れないでください。", n:"put A into B=AをBに入れる。ガバナンスの基本文", lv:1, g:"work"},
+{e:"The AI training will start next month.", j:"AI研修は来月始まります。", n:"training=研修(不可算で使うことが多い)", lv:1, g:"work"},
+{e:"How many people joined the workshop last week?", j:"先週のワークショップには何人参加しましたか?", n:"How many people=何人 / join=参加する", lv:1, g:"work"},
+{e:"This tool can answer questions about our documents.", j:"このツールは社内文書についての質問に答えられます。", n:"answer questions about=~についての質問に答える", lv:1, g:"work"},
+{e:"We update the customer data in Salesforce every week.", j:"毎週Salesforceの顧客データを更新しています。", n:"update=更新する / in Salesforce=Salesforce上の", lv:1, g:"work"},
+{e:"Let's ask each team how they use AI now.", j:"各チームに今どうAIを使っているか聞いてみましょう。", n:"ask 人 how ~=人に~かを尋ねる(間接疑問)", lv:1, g:"work"},
+{e:"The new system helps us find drawings quickly.", j:"新しいシステムのおかげで図面をすぐ見つけられます。", n:"help 人+動詞=人が~するのを助ける / drawing=図面", lv:1, g:"work"},
+{e:"Please check the AI's answer before you use it.", j:"AIの回答は使う前に確認してください。", n:"before you use it=使う前に / check=確認する", lv:1, g:"work"},
+{e:"We made a simple guide for the new tool.", j:"新しいツールの簡単なガイドを作りました。", n:"guide=手引き / for=~のための", lv:1, g:"work"},
+{e:"More people are using the tool than last month.", j:"先月より多くの人がツールを使っています。", n:"more ~ than …=…より多くの~", lv:1, g:"work"},
+{e:"If you can't log in, please contact the help desk.", j:"ログインできない場合はヘルプデスクに連絡してください。", n:"log in=ログインする / contactは前置詞不要(contact toは誤り)", lv:1, g:"work"},
+{e:"We're rolling out the new AI guidelines next quarter.", j:"来四半期に新しいAIガイドラインを展開します。", n:"roll out=展開する / guidelines=指針(複数形が普通)", lv:2, g:"work"},
+{e:"Please review the AI's output before sharing it with clients.", j:"クライアントに共有する前にAIのアウトプットを確認してください。", n:"before -ing=~する前に / share A with B", lv:2, g:"work"},
+{e:"We need to follow up with the teams that haven't finished the training.", j:"研修を終えていないチームにフォローの連絡が必要です。", n:"follow up with=~に追って連絡する / that以下が後ろから修飾", lv:2, g:"work"},
+{e:"The pilot went well, so we're expanding it to other plants.", j:"パイロットがうまくいったので、他の工場にも広げます。", n:"pilot=試験導入 / expand A to B=AをBに広げる", lv:2, g:"work"},
+{e:"Let's set up a dashboard in Salesforce to track adoption.", j:"利用状況を追跡するために、Salesforceでダッシュボードを作りましょう。", n:"set up=作成する / adoption=(ツールの)定着・利用状況", lv:2, g:"work"},
+{e:"Employees need approval before using new AI tools.", j:"社員は新しいAIツールを使う前に承認が必要です。", n:"approval=承認 / before -ing=~する前に", lv:2, g:"work"},
+{e:"We're putting together a training program for AI beginners.", j:"AI初心者向けの研修プログラムを準備しています。", n:"put together=まとめて作る(超頻出)", lv:2, g:"work"},
+{e:"Usage has doubled since we simplified the login process.", j:"ログイン手順を簡単にしてから、利用が2倍になりました。", n:"double=2倍になる / since=~して以来(現在完了と)", lv:2, g:"work"},
+{e:"The legal team is drafting rules on generative AI use.", j:"法務チームが生成AI利用に関するルールを起草しています。", n:"draft=起草する / rules on=~に関するルール", lv:2, g:"work"},
+{e:"Could you walk the sales team through the new Salesforce workflow?", j:"営業チームに新しいSalesforceのワークフローを順に説明してもらえますか?", n:"walk 人 through=人に順を追って説明する", lv:2, g:"work"},
+{e:"We collect feedback after every session to improve the training.", j:"研修改善のため、毎回のセッション後にフィードバックを集めています。", n:"collect feedback=フィードバックを集める / to improve=~するために", lv:2, g:"work"},
+{e:"Some teams still enter data manually, which slows everything down.", j:"一部のチームはまだ手入力していて、それが全体を遅くしています。", n:"which=前の内容全体を受ける関係詞 / slow down=遅くする", lv:2, g:"work"},
+{e:"The AI sometimes gives wrong answers, so human review is a must.", j:"AIは時々間違った回答をするので、人によるレビューは必須です。", n:"a must=必須のもの(名詞)/ human review=人の確認", lv:2, g:"work"},
+{e:"We're looking for use cases where AI can save the most time.", j:"AIが最も時間を節約できるユースケースを探しています。", n:"use case=活用事例 / where=~するような(関係副詞)", lv:2, g:"work"},
+{e:"Migrating the drawing data took longer than we planned.", j:"図面データの移行は計画より時間がかかりました。", n:"migrate=移行する(IT頻出)/ 動名詞主語", lv:2, g:"work"},
+{e:"Adoption is picking up now that managers use the tool themselves.", j:"管理職自身がツールを使うようになって、利用が伸びてきています。", n:"pick up=上向く / now that=今や~なので", lv:2, g:"work"},
+{e:"We can't just publish the guidelines and walk away — we need ongoing oversight.", j:"ガイドラインを出して終わりにはできません。継続的な監督が必要です。", n:"walk away=放置して去る / oversight=監督(ガバナンス頻出)", lv:3, g:"work"},
+{e:"Shadow AI is becoming a real headache for the governance team.", j:"シャドーAI(無許可のAI利用)がガバナンスチームの悩みの種になっています。", n:"headache=悩みの種 / shadow AI=会社が把握していないAI利用", lv:3, g:"work"},
+{e:"Don't take the AI's output at face value — always double-check it.", j:"AIの出力を鵜呑みにせず、必ず再確認してください。", n:"take ~ at face value=額面通りに受け取る・鵜呑みにする", lv:3, g:"work"},
+{e:"We're trying to strike a balance between innovation and risk.", j:"イノベーションとリスクのバランスを取ろうとしています。", n:"strike a balance between A and B=AとBのバランスを取る", lv:3, g:"work"},
+{e:"The rollout stalled because we didn't get buy-in from the field.", j:"現場の賛同を得られなかったため、展開が停滞しました。", n:"stall=停滞する / buy-in=賛同 / the field=現場", lv:3, g:"work"},
+{e:"Upskilling the workforce is a marathon, not a sprint.", j:"人材育成は短距離走ではなく、マラソンです。", n:"upskill=スキルを高める / a marathon, not a sprint=長期戦", lv:3, g:"work"},
+{e:"The tool is powerful, but the learning curve is pretty steep.", j:"このツールは強力ですが、習得のハードルはかなり高いです。", n:"learning curve is steep=習得が大変(学習曲線が急)", lv:3, g:"work"},
+{e:"Let's showcase a few quick wins to build momentum for the AI program.", j:"AIプログラムの勢いをつけるため、すぐ出た成果をいくつか紹介しましょう。", n:"quick win=すぐ出せる成果 / momentum=勢い", lv:3, g:"work"},
+{e:"Poor data quality keeps coming back to bite us.", j:"データ品質の悪さが、後になって何度も私たちを苦しめています。", n:"come back to bite=後で祟る / keep -ing=何度も~する", lv:3, g:"work"},
+{e:"We piloted the chatbot, but it fell short of expectations.", j:"チャットボットを試験導入しましたが、期待には届きませんでした。", n:"fall short of=~に届かない・期待外れに終わる", lv:3, g:"work"},
+{e:"Getting the veterans on board is half the battle.", j:"ベテラン勢を巻き込めれば、半分は成功したようなものです。", n:"get 人 on board=賛同させる / half the battle=山場・大部分", lv:3, g:"work"},
+{e:"Treat the guidelines as a living document and revise them as the technology evolves.", j:"ガイドラインは生きた文書として、技術の進化に合わせて改訂してください。", n:"living document=随時更新される文書 / evolve=進化する", lv:3, g:"work"}
 ];
 
 const Q = [
@@ -436,7 +483,24 @@ const Q = [
 {j:"時間がなくなってきたので、まとめに入りましょう。", e:"We're running out of time, so let's wrap up.", t:"会議定型"},
 {j:"おっしゃることはもっともですが、私は少し違う見方をしています。", e:"That's a fair point, but I see it a little differently.", t:"会議定型"},
 {j:"ざっくりした見積もりで構いません。", e:"A ballpark figure is fine.", t:"会議定型・冠詞"},
-{j:"その作業を引き受ける余裕はありますか?", e:"Do you have the bandwidth to take that on?", t:"会議定型"}
+{j:"その作業を引き受ける余裕はありますか?", e:"Do you have the bandwidth to take that on?", t:"会議定型"},
+
+/* --- 仕事関連: 生成AI・Salesforce・DX人材育成 --- */
+{j:"各部署にAI活用の担当者が1人います。", e:"There is one person in charge of AI in each department.", t:"一致・前置詞", g:"work"},
+{j:"多くの社員が毎日生成AIを使っています。", e:"A lot of employees use generative AI every day.", t:"一致", g:"work"},
+{j:"そのデータをSalesforceに入力してもらえますか?", e:"Could you enter the data into Salesforce?", t:"前置詞", g:"work"},
+{j:"研修は火曜日の午後2時に始まります。", e:"The training starts at 2 p.m. on Tuesday.", t:"前置詞・三単現", g:"work"},
+{j:"AIの回答は、使う前に必ず確認してください。", e:"Please always check the AI's answers before using them.", t:"前置詞・代名詞", g:"work"},
+{j:"彼はチームにAIツールの使い方を教えています。", e:"He teaches his team how to use AI tools.", t:"三単現", g:"work"},
+{j:"このプロジェクトの目的は、データ入力の時間を減らすことです。", e:"The goal of this project is to reduce the time for data entry.", t:"冠詞・前置詞", g:"work"},
+{j:"ガイドラインはイントラネットで見られます。", e:"The guidelines are available on the intranet.", t:"冠詞・前置詞", g:"work"},
+{j:"機密情報をAIツールに入れてはいけません。", e:"You must not put confidential information into AI tools.", t:"前置詞", g:"work"},
+{j:"先月から新しいシステムを使っています。", e:"We've been using the new system since last month.", t:"現在完了", g:"work"},
+{j:"問題があれば、AI推進チームに連絡してください。", e:"If you have any problems, please contact the AI team.", t:"前置詞(不要)", g:"work"},
+{j:"その研修には約30人が参加しました。", e:"About thirty people joined the training.", t:"一致", g:"work"},
+{j:"AIの活用事例を社内で共有しています。", e:"We share AI use cases within the company.", t:"前置詞", g:"work"},
+{j:"図面は新しいシステムで検索できます。", e:"You can search for drawings in the new system.", t:"前置詞", g:"work"},
+{j:"経営層の支持を得ることが最初のステップです。", e:"Getting support from management is the first step.", t:"動名詞主語・一致", g:"work"}
 ];
 
 /* ================= 基本ヘルパー ================= */
@@ -455,6 +519,7 @@ function saveDBank(b){localStorage.setItem("mec_dbank",JSON.stringify(b));}
 /* レベル別の出題プール */
 const LV_NAME={1:"やさしめ",2:"標準",3:"チャレンジ"};
 function dictLevel(){return localStorage.getItem("mec_dlevel")||"std";}
+function workPref(){return localStorage.getItem("mec_work")==="1";}
 function dictPool(){
   const lv=dictLevel();
   const allow=lv==="easy"?[1]:lv==="std"?[1,2]:lv==="hard"?[3]:[1,2,3];
@@ -466,6 +531,16 @@ function newProg(){
   const carry=getBank().slice(0,3);           // 昨日までの×を最大3問、今日の頭に混ぜる
   const list=[...carry];
   const dn=dayNum(); let i=0;
+  if(workPref()){                             // 仕事関連を優先: 最大5問を先に確保
+    const wq=[]; Q.forEach((q,ix)=>{if(q.g==="work")wq.push(ix);});
+    let k=0;
+    const target=Math.min(10, carry.length+5);
+    while(wq.length && list.length<target && k<wq.length*2){
+      const idx=wq[(dn*7+k)%wq.length];
+      if(!list.includes(idx)) list.push(idx);
+      k++;
+    }
+  }
   while(list.length<10 && i<200){
     const idx=(dn*13+i*3)%Q.length;
     if(!list.includes(idx)) list.push(idx);
@@ -586,7 +661,10 @@ function startDict(){
       idx=D.findIndex(d=>d.e===bank[0]); p.dbankDone=true; isRev=true;
     }else{
       const pool=dictPool(); let t=0;
-      do{ idx=pool[(dayNum()*13+t*7)%pool.length]; t++; }
+      // 仕事関連を優先: 1日3文のうち最初の2文を仕事関連プールから
+      const poolW=workPref()?pool.filter(i=>D[i].g==="work"):[];
+      const usePool=(poolW.length && p.d<2)?poolW:pool;
+      do{ idx=usePool[(dayNum()*13+t*7)%usePool.length]; t++; }
       while(p.dhist.includes(idx) && t<500);
     }
     p.dcur=idx;
@@ -598,7 +676,7 @@ function startDict(){
   dItem=D[idx];
   shCount=0;
   const tagEl=document.getElementById("d-tag");
-  tagEl.textContent=(LV_NAME[dItem.lv]||"")+(isRev?" / 復習":"");
+  tagEl.textContent=(LV_NAME[dItem.lv]||"")+(dItem.g==="work"?" / 仕事":"")+(isRev?" / 復習":"");
   tagEl.className=isRev?"tag rev":"tag";
   document.getElementById("sh-btn").textContent="再生してシャドーイング (0/5)";
   document.getElementById("d-prog").textContent=`ディクテーション ${p.d+1} / 3`;
@@ -672,7 +750,7 @@ function startQT(){
   qItem=Q[idx];
   const isReview=getBank().includes(idx);
   const tagEl=document.getElementById("q-tag");
-  tagEl.textContent=isReview?qItem.t+" / 復習":qItem.t;
+  tagEl.textContent=qItem.t+(qItem.g==="work"?" / 仕事":"")+(isReview?" / 復習":"");
   tagEl.className=isReview?"tag rev":"tag";
   document.getElementById("q-prog").textContent=`瞬間英作文 ${p.q+1} / 10`;
   document.getElementById("q-ja").textContent=qItem.j;
@@ -726,7 +804,14 @@ function buildListenQueue(){
   const seen=shuffleArr(getSeen().filter(e=>!bank.includes(e)));
   let q=[...bank,...seen];
   if(q.length<10){
-    const pool=shuffleArr(dictPool().map(i=>D[i].e).filter(e=>!q.includes(e)));
+    let pool=dictPool().map(i=>D[i].e).filter(e=>!q.includes(e));
+    if(workPref()){
+      const w=shuffleArr(pool.filter(e=>{const d=D.find(x=>x.e===e);return d&&d.g==="work";}));
+      const o=shuffleArr(pool.filter(e=>!w.includes(e)));
+      pool=[...w,...o];
+    }else{
+      shuffleArr(pool);
+    }
     q=q.concat(pool.slice(0,20-q.length));
   }
   return q;
@@ -758,7 +843,7 @@ async function listenLoop(sid){
     if(!item){lsPos++; continue;}
     const isRev=getDBank().includes(item.e);
     const tagEl=document.getElementById("l-tag");
-    tagEl.textContent=(LV_NAME[item.lv]||"")+(isRev?" / 復習":"");
+    tagEl.textContent=(LV_NAME[item.lv]||"")+(item.g==="work"?" / 仕事":"")+(isRev?" / 復習":"");
     tagEl.className=isRev?"tag rev":"tag";
     document.getElementById("l-prog").textContent="ながら聞き — "+(listenTotal()+1)+"文目";
     const pat=document.getElementById("lp-pat").value;
@@ -866,14 +951,16 @@ function breakScreen(title, sub, btns, miss){
 
 /* ================= 初期化 ================= */
 (function initDLevel(){
-  const sel=document.getElementById("dlevel-sel");
-  sel.value=dictLevel();
-  sel.onchange=()=>{
-    localStorage.setItem("mec_dlevel",sel.value);
-    // まだ始めていない「次の1文」があれば、新しいレベルで選び直す
+  const resetPick=()=>{ // まだ始めていない「次の1文」があれば、新しい設定で選び直す
     const p=loadProg();
     if(p.dcur!=null){p.dhist=p.dhist.filter(i=>i!==p.dcur); p.dcur=null; saveProg(p);}
   };
+  const sel=document.getElementById("dlevel-sel");
+  sel.value=dictLevel();
+  sel.onchange=()=>{localStorage.setItem("mec_dlevel",sel.value); resetPick();};
+  const ws=document.getElementById("work-sel");
+  ws.value=workPref()?"1":"0";
+  ws.onchange=()=>{localStorage.setItem("mec_work",ws.value); resetPick();};
 })();
 loadStreak();
 renderRecord();
