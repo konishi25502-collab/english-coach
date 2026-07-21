@@ -119,6 +119,18 @@
       <button class="btn-sub" onclick="openList()">たまっている文を見る</button>
     </div>
     <div class="card">
+      <h2>ながら聞き — 通勤・散歩のお供に</h2>
+      <div class="small" style="margin-top:0">学習済みの文(復習バンク優先)を連続自動再生します。意味を知っている文を繰り返し聞くのが、音声知覚を鍛える近道です。</div>
+      <label>再生パターン</label>
+      <select id="lp-pat">
+        <option value="meaning" selected>英→日→英(意味確認型)</option>
+        <option value="sound">英→ゆっくり→英(音に集中)</option>
+        <option value="qt">日→ポーズ→英(瞬間英作文の音声版)</option>
+      </select>
+      <button class="btn-main" onclick="startListen()">再生スタート</button>
+      <div class="small" id="lp-total"></div>
+    </div>
+    <div class="card">
       <h2>設定</h2>
       <label>音声(アクセント)— 毎日変えるのがおすすめ</label>
       <select id="voice-sel"></select>
@@ -183,6 +195,22 @@
       </div>
     </div>
     <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
+  </section>
+
+  <!-- LISTEN MODE -->
+  <section id="v-listen" class="hide">
+    <div class="card center">
+      <div class="prog" id="l-prog"></div>
+      <div class="tag" id="l-tag"></div>
+      <div class="big-en en" id="l-en" style="min-height:56px"></div>
+      <div class="ja" id="l-ja" style="min-height:24px"></div>
+      <div class="row">
+        <button class="btn-sub" id="l-pause" onclick="pauseListen()">一時停止</button>
+        <button class="btn-sub" onclick="skipListen()">次の文へ</button>
+      </div>
+      <button class="btn-ghost" onclick="stopListen()">終了してホームへ</button>
+      <div class="small">※画面がロックされると音声が止まります。画面ONのままポケットに入れてください(自動で画面が消えないよう設定しています)。</div>
+    </div>
   </section>
 
   <!-- REVIEW LIST -->
@@ -529,9 +557,10 @@ function renderRecord(){
 }
 
 /* ================= 画面制御 ================= */
-function show(id){["v-home","v-dict","v-qt","v-break","v-list"].forEach(v=>document.getElementById(v).classList.toggle("hide",v!==id));window.scrollTo(0,0);}
+function show(id){["v-home","v-dict","v-qt","v-break","v-list","v-listen"].forEach(v=>document.getElementById(v).classList.toggle("hide",v!==id));window.scrollTo(0,0);}
 function renderHome(){
   const p=loadProg();
+  updateListenTotal();
   document.getElementById("bank-count").textContent=
     "ディクテーション "+getDBank().length+"文 / 英作文 "+getBank().length+"文";
   document.getElementById("mp-d").textContent=p.d+"/3";
@@ -620,6 +649,7 @@ function shPlay(){
     shCount>=5?"シャドーイング 5/5 — 完了":`再生してシャドーイング (${shCount}/5)`;
 }
 function finishDictItem(){
+  addSeen(dItem.e);
   const p=loadProg(); p.d++; p.dcur=null; saveProg(p);
   completeDay(); stopAudio();
   if(p.d<3){
@@ -674,6 +704,120 @@ function gradeQ(ok){
   }else{
     startQT();
   }
+}
+
+/* ================= ながら聞きモード ================= */
+let lsSession=0, lsPaused=false, lsQueue=[], lsPos=0, lsWakeLock=null;
+
+/* 学習済みの文(ディクテーションを最後までやった文) */
+function getSeen(){try{return JSON.parse(localStorage.getItem("mec_seen")||"[]").filter(e=>D.some(d=>d.e===e));}catch(e){return [];}}
+function addSeen(e){const s=getSeen(); if(!s.includes(e)){s.push(e); localStorage.setItem("mec_seen",JSON.stringify(s));}}
+function listenTotal(){return parseInt(localStorage.getItem("mec_listen")||"0");}
+function updateListenTotal(){
+  const t=listenTotal();
+  document.getElementById("lp-total").textContent=t?("これまでに聞いた文: "+t+"文"):"";
+}
+
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* キュー: 復習バンク → 学習済み(シャッフル)。少ないうちは現在レベルの文で補う */
+function buildListenQueue(){
+  const bank=getDBank();
+  const seen=shuffleArr(getSeen().filter(e=>!bank.includes(e)));
+  let q=[...bank,...seen];
+  if(q.length<10){
+    const pool=shuffleArr(dictPool().map(i=>D[i].e).filter(e=>!q.includes(e)));
+    q=q.concat(pool.slice(0,20-q.length));
+  }
+  return q;
+}
+
+function speakP(text, lang, rateScale){
+  return new Promise(res=>{
+    const u=new SpeechSynthesisUtterance(text);
+    if(lang==="ja"){
+      u.lang="ja-JP"; u.rate=1.0;
+      const jv=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith("ja"));
+      if(jv) u.voice=jv;
+    }else{
+      const v=enVoices().find(x=>x.name===document.getElementById("voice-sel").value);
+      if(v) u.voice=v;
+      u.rate=parseFloat(document.getElementById("rate-sel").value)*(rateScale||1);
+    }
+    u.onend=res; u.onerror=res;
+    speechSynthesis.speak(u);
+  });
+}
+function lsWait(ms){return new Promise(res=>setTimeout(res,ms));}
+
+async function listenLoop(sid){
+  const enEl=document.getElementById("l-en"), jaEl=document.getElementById("l-ja");
+  while(sid===lsSession){
+    if(lsPos>=lsQueue.length){lsQueue=buildListenQueue(); lsPos=0;}
+    const item=D.find(d=>d.e===lsQueue[lsPos]);
+    if(!item){lsPos++; continue;}
+    const isRev=getDBank().includes(item.e);
+    const tagEl=document.getElementById("l-tag");
+    tagEl.textContent=(LV_NAME[item.lv]||"")+(isRev?" / 復習":"");
+    tagEl.className=isRev?"tag rev":"tag";
+    document.getElementById("l-prog").textContent="ながら聞き — "+(listenTotal()+1)+"文目";
+    const pat=document.getElementById("lp-pat").value;
+    if(pat==="meaning"){        /* 英→日→英: 意味確認型 */
+      enEl.textContent=item.e; jaEl.textContent="";
+      await speakP(item.e,"en",1); if(sid!==lsSession)return; await lsWait(700); if(sid!==lsSession)return;
+      jaEl.textContent=item.j;
+      await speakP(item.j,"ja"); if(sid!==lsSession)return; await lsWait(400); if(sid!==lsSession)return;
+      await speakP(item.e,"en",1);
+    }else if(pat==="sound"){    /* 英→ゆっくり→英: 音に集中 */
+      enEl.textContent=item.e; jaEl.textContent=item.j;
+      await speakP(item.e,"en",1); if(sid!==lsSession)return; await lsWait(500); if(sid!==lsSession)return;
+      await speakP(item.e,"en",0.75); if(sid!==lsSession)return; await lsWait(500); if(sid!==lsSession)return;
+      await speakP(item.e,"en",1);
+    }else{                      /* 日→ポーズ→英: 瞬間英作文の音声版 */
+      enEl.textContent=""; jaEl.textContent=item.j;
+      await speakP(item.j,"ja"); if(sid!==lsSession)return; await lsWait(2500); if(sid!==lsSession)return;
+      enEl.textContent=item.e;
+      await speakP(item.e,"en",1); if(sid!==lsSession)return; await lsWait(400); if(sid!==lsSession)return;
+      await speakP(item.e,"en",1);
+    }
+    if(sid!==lsSession)return;
+    localStorage.setItem("mec_listen",String(listenTotal()+1));
+    updateListenTotal();
+    lsPos++;
+    await lsWait(1400);
+  }
+}
+
+async function reqWakeLock(){
+  try{if("wakeLock" in navigator){lsWakeLock=await navigator.wakeLock.request("screen");}}catch(e){}
+}
+function releaseWakeLock(){try{if(lsWakeLock){lsWakeLock.release(); lsWakeLock=null;}}catch(e){}}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible" && !document.getElementById("v-listen").classList.contains("hide") && !lsPaused) reqWakeLock();
+});
+
+function startListen(){
+  if(!window.speechSynthesis) return alert("この環境は音声合成に対応していません");
+  lsQueue=buildListenQueue(); lsPos=0; lsPaused=false;
+  document.getElementById("l-pause").textContent="一時停止";
+  reqWakeLock();
+  show("v-listen");
+  lsSession++;
+  listenLoop(lsSession);
+}
+function stopListen(){lsSession++; lsPaused=false; stopAudio(); releaseWakeLock(); goHome();}
+function pauseListen(){
+  const btn=document.getElementById("l-pause");
+  if(!lsPaused){
+    lsPaused=true; lsSession++; stopAudio(); btn.textContent="再開";
+  }else{
+    lsPaused=false; btn.textContent="一時停止";
+    lsSession++; listenLoop(lsSession);   // いまの文の頭からやり直し
+  }
+}
+function skipListen(){
+  lsPos++; lsSession++; stopAudio();
+  if(!lsPaused) listenLoop(lsSession);
 }
 
 /* ---- 復習リスト画面 ---- */
