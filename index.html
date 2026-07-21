@@ -114,9 +114,21 @@
       <div class="small">連続が途切れても、塗った日は消えません。ゼロの日を減らすことがすべてです。</div>
     </div>
     <div class="card">
+      <h2>復習バンク</h2>
+      <div class="small" style="margin-top:0" id="bank-count"></div>
+      <button class="btn-sub" onclick="openList()">たまっている文を見る</button>
+    </div>
+    <div class="card">
       <h2>設定</h2>
       <label>音声(アクセント)— 毎日変えるのがおすすめ</label>
       <select id="voice-sel"></select>
+      <label>ディクテーションのレベル</label>
+      <select id="dlevel-sel">
+        <option value="easy">やさしめ — 基礎ビジネス表現 (50文)</option>
+        <option value="std" selected>標準 — やさしめ+定番表現 (100文)</option>
+        <option value="mix">ミックス — 全レベル (150文)</option>
+        <option value="hard">チャレンジ — イディオム中心 (50文)</option>
+      </select>
       <label>スピード</label>
       <select id="rate-sel">
         <option value="0.75">ゆっくり (0.75x)</option>
@@ -132,6 +144,7 @@
   <section id="v-dict" class="hide">
     <div class="card">
       <div class="prog" id="d-prog"></div>
+      <div class="tag" id="d-tag"></div>
       <h2>① 聞いて書き取る(何回聞いてもOK)</h2>
       <div class="row">
         <button class="btn-main" onclick="playCur(1)">再生</button>
@@ -172,6 +185,21 @@
     <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
   </section>
 
+  <!-- REVIEW LIST -->
+  <section id="v-list" class="hide">
+    <div class="card">
+      <h2>ディクテーション復習バンク(聞き取り7割未満)</h2>
+      <div class="small">答え合わせのたびに自動更新。7割以上聞き取れたら卒業します。</div>
+      <div id="ls-dict"></div>
+    </div>
+    <div class="card">
+      <h2>瞬間英作文 復習バンク(×だった文)</h2>
+      <div class="small">明日の最初に再出題されます。○が出たら卒業します。</div>
+      <div id="ls-q"></div>
+    </div>
+    <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
+  </section>
+
   <!-- BREAK / DONE -->
   <section id="v-break" class="hide">
     <div class="card center">
@@ -187,106 +215,157 @@
 "use strict";
 /* ================= データ ================= */
 const D = [
-{e:"We're gonna have to push the rollout back a week because the vendor's dragging their feet.", j:"ベンダーがもたついているので、ロールアウトを1週間遅らせないといけません。", n:"gonna=going to / push back=延期する / drag one's feet=もたつく"},
-{e:"Could you loop in the Tokyo team by end of day?", j:"今日中に東京チームを巻き込んでもらえますか?", n:"loop in=(メール等に)巻き込む / by end of day=今日中に"},
-{e:"Let's take this offline and set up a separate call.", j:"この件は会議の外で話すことにして、別途通話を設定しましょう。", n:"take ~ offline=その場では議論せず別途話す(会議頻出)"},
-{e:"I didn't quite catch that. Could you say it again?", j:"よく聞き取れませんでした。もう一度言ってもらえますか?", n:"catch=聞き取る。聞き返しの最重要フレーズ"},
-{e:"We're running out of time, so let's move on to the next item.", j:"時間がなくなってきたので、次の議題に移りましょう。", n:"run out of=尽きる / move on to=移る。running outの連結に注意"},
-{e:"The numbers don't add up, so I'll double-check them and get back to you.", j:"数字が合わないので、再確認して折り返します。", n:"add up=計算が合う / get back to you=折り返す"},
-{e:"Can everyone see my screen, or is it still loading?", j:"皆さん画面見えていますか?まだ読み込み中ですか?", n:"画面共有の定番。or is itの弱形に注意"},
-{e:"If it's okay with everyone, I'd like to wrap up five minutes early.", j:"皆さんが良ければ5分早く終わりたいのですが。", n:"wrap up=切り上げる・まとめる"},
-{e:"We should've flagged this issue much earlier.", j:"この問題はもっと早く報告すべきでした。", n:"should've=should have(シュダヴ) / flag=問題を知らせる"},
-{e:"I'll send out the minutes right after the meeting.", j:"会議の直後に議事録を送ります。", n:"minutes=議事録(分ではない!)"},
-{e:"There's a bit of a bottleneck on the approval side.", j:"承認まわりが少しボトルネックになっています。", n:"a bit of aの連結(アビロヴァ)に注意"},
-{e:"Sorry to interrupt, but could we go back to the previous slide?", j:"割り込んですみません、前のスライドに戻れますか?", n:"Sorry to interrupt=会議で発言に割り込む時の定番"},
-{e:"It might be worth getting legal involved before we sign off.", j:"承認する前に法務を入れる価値があるかもしれません。", n:"worth -ing=~する価値がある / sign off=承認する"},
-{e:"The pilot went better than expected, so we're scaling it up next quarter.", j:"パイロットが予想以上にうまくいったので、来四半期に拡大します。", n:"scale up=拡大する / than expectedの弱形"},
-{e:"Heads up — the deadline's been moved up to Friday.", j:"注意です。締切が金曜に前倒しになりました。", n:"heads up=事前連絡 / move up=前倒し(push backの逆)"},
-{e:"I'm afraid we're talking past each other. Let me rephrase.", j:"話が噛み合っていないようです。言い直しますね。", n:"talk past each other=話が噛み合わない / rephrase=言い換える"},
-{e:"Can we park that for now and come back to it later?", j:"その件は一旦保留にして、後で戻ってもいいですか?", n:"park=一時保留にする(会議頻出)"},
-{e:"Rolling this out globally will take at least six months.", j:"これをグローバル展開するには最低6ヶ月かかります。", n:"roll out=展開する。動名詞主語の形に注意"},
-{e:"We can't afford another delay, so let's lock down the scope today.", j:"これ以上の遅延は許されないので、今日スコープを確定しましょう。", n:"can't afford=余裕がない / lock down=確定させる"},
-{e:"Would it help if I walked you through the process step by step?", j:"プロセスを順を追って説明しましょうか?", n:"walk you through=順に説明する(超頻出)"},
-{e:"The budget's tight, but I think we can make it work.", j:"予算は厳しいですが、なんとかできると思います。", n:"tight=厳しい / make it work=なんとかする"},
-{e:"Let me play devil's advocate for a second.", j:"あえて反対の立場から言わせてください。", n:"play devil's advocate=議論のためにあえて反論する"},
-{e:"He's out of office this week, so I'm covering for him.", j:"彼は今週不在なので、私が代わりを務めています。", n:"out of office=不在 / cover for=代行する"},
-{e:"It turns out the issue was on our end, not the vendor's.", j:"実は問題はベンダーではなくこちら側にありました。", n:"it turns out=実は~だと判明 / on our end=こちら側"},
-{e:"Long story short, we're going with option B.", j:"要するに、オプションBで行くことにしました。", n:"long story short=要するに / go with=採用する"},
-{e:"Feel free to jump in if you have any questions.", j:"質問があれば遠慮なく割り込んでください。", n:"jump in=会話に入る。会議のファシリで頻出"},
-{e:"We need a rough estimate by Wednesday. A ballpark figure is fine.", j:"水曜までにざっくりした見積もりが必要です。概算で構いません。", n:"ballpark figure=概算(超頻出)"},
-{e:"I'll follow up with an email summarizing the action items.", j:"アクションアイテムをまとめたメールをこの後送ります。", n:"follow up with=~で追って連絡する"},
-{e:"That's a fair point, but I see it a little differently.", j:"もっともな指摘ですが、私は少し違う見方をしています。", n:"fair point=もっともな指摘。反論の前置きに"},
-{e:"Do you have the bandwidth to take this on?", j:"これを引き受ける余裕はありますか?", n:"bandwidth=(人の)余裕・キャパ / take on=引き受ける"},
-{e:"Let's not reinvent the wheel. We can reuse last year's framework.", j:"車輪の再発明はやめましょう。去年のフレームワークを再利用できます。", n:"reinvent the wheel=すでにあるものを作り直す無駄"},
-{e:"The demo kept crashing, so we had to fall back on the slides.", j:"デモが落ち続けたので、スライドで代用せざるを得ませんでした。", n:"kept -ing=~し続けた / fall back on=代替に頼る"},
-{e:"If he hadn't disagreed, this project would have moved a lot faster.", j:"彼が反対していなければ、このプロジェクトはもっと早く進んでいたでしょう。", n:"仮定法過去完了(B2の関門)。would'veの音に注意"},
-{e:"I'd rather we didn't commit to a date until the testing's done.", j:"テストが終わるまでは日程を確約しないほうがいいと思います。", n:"I'd rather we didn't=~しないほうがいい(丁寧な反対)"},
-{e:"Something came up, so I might be five minutes late to the next call.", j:"急用ができたので、次の会議に5分遅れるかもしれません。", n:"something came up=急用ができた(定番の言い訳)"},
-{e:"Could you break down the costs by region?", j:"コストを地域別に分けてもらえますか?", n:"break down=分解する / by region=地域別に"},
-{e:"We're still waiting on sign-off from the security team.", j:"まだセキュリティチームの承認待ちです。", n:"wait on=~を待つ / sign-off=承認"},
-{e:"To be honest, I have mixed feelings about outsourcing this.", j:"正直、これを外注することには複雑な気持ちです。", n:"mixed feelings=複雑な心境"},
-{e:"Whatever we decide, we should keep the stakeholders in the loop.", j:"何を決めるにせよ、ステークホルダーには常に共有すべきです。", n:"keep ~ in the loop=常に情報共有する"},
-{e:"Off the top of my head, I'd say around twenty percent.", j:"ぱっと思いつく限りでは、20%くらいですね。", n:"off the top of my head=即答で・うろ覚えで"},
-{e:"Let's circle back once we have the Q3 numbers.", j:"Q3の数字が出たら、またこの話に戻りましょう。", n:"circle back=後で戻る(会議頻出)"},
-{e:"Are we all on the same page about the timeline?", j:"タイムラインについて認識は揃っていますか?", n:"on the same page=認識が一致している"},
-{e:"Let's hit the ground running first thing Monday morning.", j:"月曜の朝一番から全力で始めましょう。", n:"hit the ground running=初日から全力で / first thing=朝一番に"},
-{e:"Could you give us a quick rundown of where things stand?", j:"現状を手短にまとめてもらえますか?", n:"rundown=要約 / where things stand=現状"},
-{e:"I'll cc you on the thread so you're up to speed.", j:"状況を把握できるよう、スレッドにCCで入れておきます。", n:"up to speed=最新状況を把握している"},
-{e:"The migration's on track, but we're not out of the woods yet.", j:"移行は順調ですが、まだ安心はできません。", n:"on track=順調 / out of the woods=危機を脱した"},
-{e:"Let's touch base tomorrow before the client call.", j:"クライアントとの電話の前に、明日軽くすり合わせましょう。", n:"touch base=軽く連絡を取る(超頻出)"},
-{e:"We'll need buy-in from the regional heads before we commit.", j:"確約する前に、各地域の責任者の賛同が必要です。", n:"buy-in=賛同・合意(ビジネス頻出名詞)"},
-{e:"Can you flesh out the proposal a bit more before Friday?", j:"金曜までに提案をもう少し肉付けしてもらえますか?", n:"flesh out=肉付けする・具体化する"},
-{e:"The server went down last night, but it's back up now.", j:"昨夜サーバーが落ちましたが、今は復旧しています。", n:"go down=停止する / back up=復旧(upの音が弱くなる)"},
-{e:"I'll take the lead on this one, if that works for everyone.", j:"皆さんが良ければ、この件は私が主導します。", n:"take the lead on=主導する / if that works=それで良ければ"},
-{e:"We're getting mixed signals from the vendor about the timeline.", j:"スケジュールについて、ベンダーから矛盾した情報が来ています。", n:"mixed signals=矛盾したメッセージ"},
-{e:"Let's put a pin in that and move on.", j:"その件は一旦置いておいて、先に進みましょう。", n:"put a pin in=保留にする(parkと同義の口語)"},
-{e:"The new tool should streamline the approval process quite a bit.", j:"新ツールで承認プロセスがかなり効率化されるはずです。", n:"streamline=効率化する / quite a bitの連結"},
-{e:"Could you double-check the figures before we send them out?", j:"送る前に数字を再確認してもらえますか?", n:"figures=数字 / send out=発信する"},
-{e:"We're behind schedule, so something's got to give.", j:"予定より遅れているので、何かを諦めないといけません。", n:"something's got to give=何かを犠牲にせざるを得ない"},
-{e:"He tends to go off on a tangent, so keep the agenda tight.", j:"彼は話が脱線しがちなので、議題をきっちり管理してください。", n:"go off on a tangent=話が脱線する"},
-{e:"It's not set in stone yet, so feel free to push back.", j:"まだ確定ではないので、遠慮なく反対意見をどうぞ。", n:"set in stone=確定した / push back=反論する"},
-{e:"The rollout went off without a hitch.", j:"ロールアウトは何の問題もなく完了しました。", n:"without a hitch=つつがなく(hitchの音に注意)"},
-{e:"Let's not get ahead of ourselves — the pilot isn't finished yet.", j:"先走るのはやめましょう。パイロットはまだ終わっていません。", n:"get ahead of ourselves=先走る"},
-{e:"Could you bring everyone up to speed on the security incident?", j:"セキュリティインシデントについて皆に状況共有してもらえますか?", n:"bring ~ up to speed=最新状況を共有する"},
-{e:"I'll ping you when the report's ready.", j:"レポートができたら連絡します。", n:"ping=軽く連絡する(IT系口語)"},
-{e:"We should sort this out before it snowballs into a bigger issue.", j:"大きな問題に膨らむ前に解決すべきです。", n:"sort out=解決する / snowball=雪だるま式に膨らむ"},
-{e:"The client's on board, but legal still has some concerns.", j:"クライアントは乗り気ですが、法務にはまだ懸念があります。", n:"on board=賛成している / client'sの短縮"},
-{e:"Give me a second — my screen froze.", j:"ちょっと待ってください、画面が固まりました。", n:"freeze-froze=固まる。リモート会議の定番"},
-{e:"You're breaking up a little. Could you repeat that?", j:"音声が途切れています。もう一度言ってもらえますか?", n:"break up=音声が途切れる(リモート会議必須)"},
-{e:"Sorry, I was on mute. As I was saying, the tests passed.", j:"すみません、ミュートでした。で、話の続きですが、テストは通りました。", n:"I was on mute=世界共通の会議あるある / as I was saying=話を戻すと"},
-{e:"Let's keep this meeting short and sweet — thirty minutes, tops.", j:"会議は手短に済ませましょう。最長でも30分で。", n:"short and sweet=手短に / tops=最大でも"},
-{e:"We've been going back and forth on this for weeks.", j:"この件は何週間も議論が行ったり来たりしています。", n:"go back and forth=行ったり来たりする"},
-{e:"I'll flag it to my manager and see how she wants to handle it.", j:"上司に報告して、どう対応したいか確認します。", n:"flag it to ~=~に報告・注意喚起する"},
-{e:"The upgrade is a bit of a double-edged sword.", j:"このアップグレードは諸刃の剣です。", n:"double-edged sword=諸刃の剣"},
-{e:"Can we get a quick show of hands on option A?", j:"オプションAに賛成の人、挙手してもらえますか?", n:"show of hands=挙手(採決)"},
-{e:"That's outside the scope of this phase, I'm afraid.", j:"申し訳ないですが、それは今フェーズのスコープ外です。", n:"I'm afraid=残念ながら(丁寧な否定の定番)"},
-{e:"We'll cross that bridge when we come to it.", j:"その問題はその時が来たら考えましょう。", n:"cross that bridge when we come to it=今は心配しない"},
-{e:"The data speaks for itself — usage has tripled since March.", j:"データが全てを物語っています。利用は3月から3倍です。", n:"speak for itself=見れば明らか / triple=3倍になる"},
-{e:"Could you walk me through the numbers one more time?", j:"もう一度数字を順に説明してもらえますか?", n:"walk me through=順を追って説明して"},
-{e:"I don't want to step on anyone's toes, but I think we should rethink this.", j:"誰かの領分を侵すつもりはないのですが、これは再考すべきだと思います。", n:"step on someone's toes=領分を侵す・気分を害する"},
-{e:"Let's aim to have a draft ready by close of business Thursday.", j:"木曜の終業までにドラフトを用意することを目指しましょう。", n:"close of business(COB)=終業時刻まで"},
-{e:"If anything comes up, don't hesitate to reach out.", j:"何かあれば遠慮なく連絡してください。", n:"come up=(問題が)発生する / reach out=連絡する"},
-{e:"The handover should be seamless if we plan it right.", j:"きちんと計画すれば、引き継ぎはスムーズにいくはずです。", n:"handover=引き継ぎ / seamless=切れ目のない"},
-{e:"We're stretched pretty thin this quarter.", j:"今四半期はリソースがかなり逼迫しています。", n:"stretched thin=人手・資源が足りない"},
-{e:"There's been a bit of pushback from the sales team.", j:"営業チームから多少の反発が出ています。", n:"pushback=反発(名詞)/ There's beenの音"},
-{e:"I'd like to piggyback on what Maria just said.", j:"今のマリアの発言に付け加えたいのですが。", n:"piggyback on=便乗する・付け足す(会議頻出)"},
-{e:"Rumor has it the reorg will be announced next month.", j:"噂では、組織再編は来月発表されるらしいです。", n:"rumor has it=噂によると / reorg=組織再編"},
-{e:"Let's do a quick sanity check before we ship it.", j:"リリース前にざっと確認しておきましょう。", n:"sanity check=常識的な整合性チェック(IT頻出)"},
-{e:"My calendar's pretty packed, but I can squeeze you in at four.", j:"予定はかなり詰まっていますが、4時ならねじ込めます。", n:"packed=ぎっしり / squeeze you in=予定にねじ込む"},
-{e:"The fix is only a band-aid — we'll need a proper solution eventually.", j:"この修正は応急処置に過ぎず、いずれ本格的な解決策が必要です。", n:"band-aid=その場しのぎの対処"},
-{e:"Everything's up in the air until the budget's approved.", j:"予算が承認されるまで、すべてが宙ぶらりんです。", n:"up in the air=未確定・宙ぶらりん"},
-{e:"He walked me through the setup, so I'm good to go.", j:"セットアップを一通り教えてもらったので、もう大丈夫です。", n:"good to go=準備OK"},
-{e:"Thanks for bearing with us during the outage.", j:"障害の間、ご辛抱いただきありがとうございました。", n:"bear with=辛抱して付き合う / outage=システム障害"},
-{e:"Let's get the ball rolling with introductions.", j:"まずは自己紹介から始めましょう。", n:"get the ball rolling=物事を始める"},
-{e:"The figures look off — could someone go over the spreadsheet again?", j:"数字がおかしいようです。誰かスプレッドシートを見直してもらえますか?", n:"look off=何かおかしい / go over=見直す"},
-{e:"We'll have to make do with the current setup for now.", j:"当面は今の環境でなんとかやりくりするしかありません。", n:"make do with=あるもので間に合わせる"},
-{e:"On second thought, let's loop legal in from the start.", j:"考え直したのですが、最初から法務を入れましょう。", n:"on second thought=考え直すと"},
-{e:"It boils down to cost versus speed.", j:"要するにコストかスピードかの問題です。", n:"boil down to=突き詰めると~になる"},
-{e:"I'll send over the details after lunch.", j:"詳細は昼食後に送ります。", n:"send over=送る(overの弱形に注意)"},
-{e:"The demo blew everyone away.", j:"デモは皆に強烈な印象を与えました。", n:"blow away=圧倒する・感動させる"},
-{e:"We can't please everyone, so let's prioritize the top three requests.", j:"全員は満足させられないので、上位3つの要望を優先しましょう。", n:"please=満足させる / prioritize=優先順位をつける"},
-{e:"Bear in mind that the figures are still preliminary.", j:"この数字はまだ暫定値であることをお忘れなく。", n:"bear in mind=心に留めておく / preliminary=暫定の"},
-{e:"That wraps it up for today — thanks, everyone.", j:"今日はこれで終わりです。皆さんありがとうございました。", n:"that wraps it up=これで終了(締めの定番)"}
+{e:"We're gonna have to push the rollout back a week because the vendor's dragging their feet.", j:"ベンダーがもたついているので、ロールアウトを1週間遅らせないといけません。", n:"gonna=going to / push back=延期する / drag one's feet=もたつく", lv:3},
+{e:"Could you loop in the Tokyo team by end of day?", j:"今日中に東京チームを巻き込んでもらえますか?", n:"loop in=(メール等に)巻き込む / by end of day=今日中に", lv:2},
+{e:"Let's take this offline and set up a separate call.", j:"この件は会議の外で話すことにして、別途通話を設定しましょう。", n:"take ~ offline=その場では議論せず別途話す(会議頻出)", lv:3},
+{e:"I didn't quite catch that. Could you say it again?", j:"よく聞き取れませんでした。もう一度言ってもらえますか?", n:"catch=聞き取る。聞き返しの最重要フレーズ", lv:2},
+{e:"We're running out of time, so let's move on to the next item.", j:"時間がなくなってきたので、次の議題に移りましょう。", n:"run out of=尽きる / move on to=移る。running outの連結に注意", lv:2},
+{e:"The numbers don't add up, so I'll double-check them and get back to you.", j:"数字が合わないので、再確認して折り返します。", n:"add up=計算が合う / get back to you=折り返す", lv:3},
+{e:"Can everyone see my screen, or is it still loading?", j:"皆さん画面見えていますか?まだ読み込み中ですか?", n:"画面共有の定番。or is itの弱形に注意", lv:2},
+{e:"If it's okay with everyone, I'd like to wrap up five minutes early.", j:"皆さんが良ければ5分早く終わりたいのですが。", n:"wrap up=切り上げる・まとめる", lv:2},
+{e:"We should've flagged this issue much earlier.", j:"この問題はもっと早く報告すべきでした。", n:"should've=should have(シュダヴ) / flag=問題を知らせる", lv:2},
+{e:"I'll send out the minutes right after the meeting.", j:"会議の直後に議事録を送ります。", n:"minutes=議事録(分ではない!)", lv:2},
+{e:"There's a bit of a bottleneck on the approval side.", j:"承認まわりが少しボトルネックになっています。", n:"a bit of aの連結(アビロヴァ)に注意", lv:2},
+{e:"Sorry to interrupt, but could we go back to the previous slide?", j:"割り込んですみません、前のスライドに戻れますか?", n:"Sorry to interrupt=会議で発言に割り込む時の定番", lv:2},
+{e:"It might be worth getting legal involved before we sign off.", j:"承認する前に法務を入れる価値があるかもしれません。", n:"worth -ing=~する価値がある / sign off=承認する", lv:3},
+{e:"The pilot went better than expected, so we're scaling it up next quarter.", j:"パイロットが予想以上にうまくいったので、来四半期に拡大します。", n:"scale up=拡大する / than expectedの弱形", lv:2},
+{e:"Heads up — the deadline's been moved up to Friday.", j:"注意です。締切が金曜に前倒しになりました。", n:"heads up=事前連絡 / move up=前倒し(push backの逆)", lv:3},
+{e:"I'm afraid we're talking past each other. Let me rephrase.", j:"話が噛み合っていないようです。言い直しますね。", n:"talk past each other=話が噛み合わない / rephrase=言い換える", lv:3},
+{e:"Can we park that for now and come back to it later?", j:"その件は一旦保留にして、後で戻ってもいいですか?", n:"park=一時保留にする(会議頻出)", lv:3},
+{e:"Rolling this out globally will take at least six months.", j:"これをグローバル展開するには最低6ヶ月かかります。", n:"roll out=展開する。動名詞主語の形に注意", lv:2},
+{e:"We can't afford another delay, so let's lock down the scope today.", j:"これ以上の遅延は許されないので、今日スコープを確定しましょう。", n:"can't afford=余裕がない / lock down=確定させる", lv:3},
+{e:"Would it help if I walked you through the process step by step?", j:"プロセスを順を追って説明しましょうか?", n:"walk you through=順に説明する(超頻出)", lv:2},
+{e:"The budget's tight, but I think we can make it work.", j:"予算は厳しいですが、なんとかできると思います。", n:"tight=厳しい / make it work=なんとかする", lv:2},
+{e:"Let me play devil's advocate for a second.", j:"あえて反対の立場から言わせてください。", n:"play devil's advocate=議論のためにあえて反論する", lv:3},
+{e:"He's out of office this week, so I'm covering for him.", j:"彼は今週不在なので、私が代わりを務めています。", n:"out of office=不在 / cover for=代行する", lv:2},
+{e:"It turns out the issue was on our end, not the vendor's.", j:"実は問題はベンダーではなくこちら側にありました。", n:"it turns out=実は~だと判明 / on our end=こちら側", lv:3},
+{e:"Long story short, we're going with option B.", j:"要するに、オプションBで行くことにしました。", n:"long story short=要するに / go with=採用する", lv:3},
+{e:"Feel free to jump in if you have any questions.", j:"質問があれば遠慮なく割り込んでください。", n:"jump in=会話に入る。会議のファシリで頻出", lv:2},
+{e:"We need a rough estimate by Wednesday. A ballpark figure is fine.", j:"水曜までにざっくりした見積もりが必要です。概算で構いません。", n:"ballpark figure=概算(超頻出)", lv:3},
+{e:"I'll follow up with an email summarizing the action items.", j:"アクションアイテムをまとめたメールをこの後送ります。", n:"follow up with=~で追って連絡する", lv:2},
+{e:"That's a fair point, but I see it a little differently.", j:"もっともな指摘ですが、私は少し違う見方をしています。", n:"fair point=もっともな指摘。反論の前置きに", lv:2},
+{e:"Do you have the bandwidth to take this on?", j:"これを引き受ける余裕はありますか?", n:"bandwidth=(人の)余裕・キャパ / take on=引き受ける", lv:3},
+{e:"Let's not reinvent the wheel. We can reuse last year's framework.", j:"車輪の再発明はやめましょう。去年のフレームワークを再利用できます。", n:"reinvent the wheel=すでにあるものを作り直す無駄", lv:3},
+{e:"The demo kept crashing, so we had to fall back on the slides.", j:"デモが落ち続けたので、スライドで代用せざるを得ませんでした。", n:"kept -ing=~し続けた / fall back on=代替に頼る", lv:3},
+{e:"If he hadn't disagreed, this project would have moved a lot faster.", j:"彼が反対していなければ、このプロジェクトはもっと早く進んでいたでしょう。", n:"仮定法過去完了(B2の関門)。would'veの音に注意", lv:2},
+{e:"I'd rather we didn't commit to a date until the testing's done.", j:"テストが終わるまでは日程を確約しないほうがいいと思います。", n:"I'd rather we didn't=~しないほうがいい(丁寧な反対)", lv:3},
+{e:"Something came up, so I might be five minutes late to the next call.", j:"急用ができたので、次の会議に5分遅れるかもしれません。", n:"something came up=急用ができた(定番の言い訳)", lv:2},
+{e:"Could you break down the costs by region?", j:"コストを地域別に分けてもらえますか?", n:"break down=分解する / by region=地域別に", lv:2},
+{e:"We're still waiting on sign-off from the security team.", j:"まだセキュリティチームの承認待ちです。", n:"wait on=~を待つ / sign-off=承認", lv:2},
+{e:"To be honest, I have mixed feelings about outsourcing this.", j:"正直、これを外注することには複雑な気持ちです。", n:"mixed feelings=複雑な心境", lv:2},
+{e:"Whatever we decide, we should keep the stakeholders in the loop.", j:"何を決めるにせよ、ステークホルダーには常に共有すべきです。", n:"keep ~ in the loop=常に情報共有する", lv:2},
+{e:"Off the top of my head, I'd say around twenty percent.", j:"ぱっと思いつく限りでは、20%くらいですね。", n:"off the top of my head=即答で・うろ覚えで", lv:3},
+{e:"Let's circle back once we have the Q3 numbers.", j:"Q3の数字が出たら、またこの話に戻りましょう。", n:"circle back=後で戻る(会議頻出)", lv:2},
+{e:"Are we all on the same page about the timeline?", j:"タイムラインについて認識は揃っていますか?", n:"on the same page=認識が一致している", lv:2},
+{e:"Let's hit the ground running first thing Monday morning.", j:"月曜の朝一番から全力で始めましょう。", n:"hit the ground running=初日から全力で / first thing=朝一番に", lv:3},
+{e:"Could you give us a quick rundown of where things stand?", j:"現状を手短にまとめてもらえますか?", n:"rundown=要約 / where things stand=現状", lv:3},
+{e:"I'll cc you on the thread so you're up to speed.", j:"状況を把握できるよう、スレッドにCCで入れておきます。", n:"up to speed=最新状況を把握している", lv:2},
+{e:"The migration's on track, but we're not out of the woods yet.", j:"移行は順調ですが、まだ安心はできません。", n:"on track=順調 / out of the woods=危機を脱した", lv:3},
+{e:"Let's touch base tomorrow before the client call.", j:"クライアントとの電話の前に、明日軽くすり合わせましょう。", n:"touch base=軽く連絡を取る(超頻出)", lv:3},
+{e:"We'll need buy-in from the regional heads before we commit.", j:"確約する前に、各地域の責任者の賛同が必要です。", n:"buy-in=賛同・合意(ビジネス頻出名詞)", lv:3},
+{e:"Can you flesh out the proposal a bit more before Friday?", j:"金曜までに提案をもう少し肉付けしてもらえますか?", n:"flesh out=肉付けする・具体化する", lv:3},
+{e:"The server went down last night, but it's back up now.", j:"昨夜サーバーが落ちましたが、今は復旧しています。", n:"go down=停止する / back up=復旧(upの音が弱くなる)", lv:2},
+{e:"I'll take the lead on this one, if that works for everyone.", j:"皆さんが良ければ、この件は私が主導します。", n:"take the lead on=主導する / if that works=それで良ければ", lv:2},
+{e:"We're getting mixed signals from the vendor about the timeline.", j:"スケジュールについて、ベンダーから矛盾した情報が来ています。", n:"mixed signals=矛盾したメッセージ", lv:2},
+{e:"Let's put a pin in that and move on.", j:"その件は一旦置いておいて、先に進みましょう。", n:"put a pin in=保留にする(parkと同義の口語)", lv:3},
+{e:"The new tool should streamline the approval process quite a bit.", j:"新ツールで承認プロセスがかなり効率化されるはずです。", n:"streamline=効率化する / quite a bitの連結", lv:2},
+{e:"Could you double-check the figures before we send them out?", j:"送る前に数字を再確認してもらえますか?", n:"figures=数字 / send out=発信する", lv:2},
+{e:"We're behind schedule, so something's got to give.", j:"予定より遅れているので、何かを諦めないといけません。", n:"something's got to give=何かを犠牲にせざるを得ない", lv:3},
+{e:"He tends to go off on a tangent, so keep the agenda tight.", j:"彼は話が脱線しがちなので、議題をきっちり管理してください。", n:"go off on a tangent=話が脱線する", lv:3},
+{e:"It's not set in stone yet, so feel free to push back.", j:"まだ確定ではないので、遠慮なく反対意見をどうぞ。", n:"set in stone=確定した / push back=反論する", lv:3},
+{e:"The rollout went off without a hitch.", j:"ロールアウトは何の問題もなく完了しました。", n:"without a hitch=つつがなく(hitchの音に注意)", lv:3},
+{e:"Let's not get ahead of ourselves — the pilot isn't finished yet.", j:"先走るのはやめましょう。パイロットはまだ終わっていません。", n:"get ahead of ourselves=先走る", lv:3},
+{e:"Could you bring everyone up to speed on the security incident?", j:"セキュリティインシデントについて皆に状況共有してもらえますか?", n:"bring ~ up to speed=最新状況を共有する", lv:2},
+{e:"I'll ping you when the report's ready.", j:"レポートができたら連絡します。", n:"ping=軽く連絡する(IT系口語)", lv:2},
+{e:"We should sort this out before it snowballs into a bigger issue.", j:"大きな問題に膨らむ前に解決すべきです。", n:"sort out=解決する / snowball=雪だるま式に膨らむ", lv:3},
+{e:"The client's on board, but legal still has some concerns.", j:"クライアントは乗り気ですが、法務にはまだ懸念があります。", n:"on board=賛成している / client'sの短縮", lv:2},
+{e:"Give me a second — my screen froze.", j:"ちょっと待ってください、画面が固まりました。", n:"freeze-froze=固まる。リモート会議の定番", lv:2},
+{e:"You're breaking up a little. Could you repeat that?", j:"音声が途切れています。もう一度言ってもらえますか?", n:"break up=音声が途切れる(リモート会議必須)", lv:2},
+{e:"Sorry, I was on mute. As I was saying, the tests passed.", j:"すみません、ミュートでした。で、話の続きですが、テストは通りました。", n:"I was on mute=世界共通の会議あるある / as I was saying=話を戻すと", lv:2},
+{e:"Let's keep this meeting short and sweet — thirty minutes, tops.", j:"会議は手短に済ませましょう。最長でも30分で。", n:"short and sweet=手短に / tops=最大でも", lv:3},
+{e:"We've been going back and forth on this for weeks.", j:"この件は何週間も議論が行ったり来たりしています。", n:"go back and forth=行ったり来たりする", lv:2},
+{e:"I'll flag it to my manager and see how she wants to handle it.", j:"上司に報告して、どう対応したいか確認します。", n:"flag it to ~=~に報告・注意喚起する", lv:2},
+{e:"The upgrade is a bit of a double-edged sword.", j:"このアップグレードは諸刃の剣です。", n:"double-edged sword=諸刃の剣", lv:3},
+{e:"Can we get a quick show of hands on option A?", j:"オプションAに賛成の人、挙手してもらえますか?", n:"show of hands=挙手(採決)", lv:3},
+{e:"That's outside the scope of this phase, I'm afraid.", j:"申し訳ないですが、それは今フェーズのスコープ外です。", n:"I'm afraid=残念ながら(丁寧な否定の定番)", lv:2},
+{e:"We'll cross that bridge when we come to it.", j:"その問題はその時が来たら考えましょう。", n:"cross that bridge when we come to it=今は心配しない", lv:3},
+{e:"The data speaks for itself — usage has tripled since March.", j:"データが全てを物語っています。利用は3月から3倍です。", n:"speak for itself=見れば明らか / triple=3倍になる", lv:2},
+{e:"Could you walk me through the numbers one more time?", j:"もう一度数字を順に説明してもらえますか?", n:"walk me through=順を追って説明して", lv:2},
+{e:"I don't want to step on anyone's toes, but I think we should rethink this.", j:"誰かの領分を侵すつもりはないのですが、これは再考すべきだと思います。", n:"step on someone's toes=領分を侵す・気分を害する", lv:3},
+{e:"Let's aim to have a draft ready by close of business Thursday.", j:"木曜の終業までにドラフトを用意することを目指しましょう。", n:"close of business(COB)=終業時刻まで", lv:3},
+{e:"If anything comes up, don't hesitate to reach out.", j:"何かあれば遠慮なく連絡してください。", n:"come up=(問題が)発生する / reach out=連絡する", lv:2},
+{e:"The handover should be seamless if we plan it right.", j:"きちんと計画すれば、引き継ぎはスムーズにいくはずです。", n:"handover=引き継ぎ / seamless=切れ目のない", lv:2},
+{e:"We're stretched pretty thin this quarter.", j:"今四半期はリソースがかなり逼迫しています。", n:"stretched thin=人手・資源が足りない", lv:3},
+{e:"There's been a bit of pushback from the sales team.", j:"営業チームから多少の反発が出ています。", n:"pushback=反発(名詞)/ There's beenの音", lv:2},
+{e:"I'd like to piggyback on what Maria just said.", j:"今のマリアの発言に付け加えたいのですが。", n:"piggyback on=便乗する・付け足す(会議頻出)", lv:3},
+{e:"Rumor has it the reorg will be announced next month.", j:"噂では、組織再編は来月発表されるらしいです。", n:"rumor has it=噂によると / reorg=組織再編", lv:3},
+{e:"Let's do a quick sanity check before we ship it.", j:"リリース前にざっと確認しておきましょう。", n:"sanity check=常識的な整合性チェック(IT頻出)", lv:3},
+{e:"My calendar's pretty packed, but I can squeeze you in at four.", j:"予定はかなり詰まっていますが、4時ならねじ込めます。", n:"packed=ぎっしり / squeeze you in=予定にねじ込む", lv:3},
+{e:"The fix is only a band-aid — we'll need a proper solution eventually.", j:"この修正は応急処置に過ぎず、いずれ本格的な解決策が必要です。", n:"band-aid=その場しのぎの対処", lv:3},
+{e:"Everything's up in the air until the budget's approved.", j:"予算が承認されるまで、すべてが宙ぶらりんです。", n:"up in the air=未確定・宙ぶらりん", lv:3},
+{e:"He walked me through the setup, so I'm good to go.", j:"セットアップを一通り教えてもらったので、もう大丈夫です。", n:"good to go=準備OK", lv:2},
+{e:"Thanks for bearing with us during the outage.", j:"障害の間、ご辛抱いただきありがとうございました。", n:"bear with=辛抱して付き合う / outage=システム障害", lv:3},
+{e:"Let's get the ball rolling with introductions.", j:"まずは自己紹介から始めましょう。", n:"get the ball rolling=物事を始める", lv:3},
+{e:"The figures look off — could someone go over the spreadsheet again?", j:"数字がおかしいようです。誰かスプレッドシートを見直してもらえますか?", n:"look off=何かおかしい / go over=見直す", lv:3},
+{e:"We'll have to make do with the current setup for now.", j:"当面は今の環境でなんとかやりくりするしかありません。", n:"make do with=あるもので間に合わせる", lv:3},
+{e:"On second thought, let's loop legal in from the start.", j:"考え直したのですが、最初から法務を入れましょう。", n:"on second thought=考え直すと", lv:2},
+{e:"It boils down to cost versus speed.", j:"要するにコストかスピードかの問題です。", n:"boil down to=突き詰めると~になる", lv:3},
+{e:"I'll send over the details after lunch.", j:"詳細は昼食後に送ります。", n:"send over=送る(overの弱形に注意)", lv:2},
+{e:"The demo blew everyone away.", j:"デモは皆に強烈な印象を与えました。", n:"blow away=圧倒する・感動させる", lv:3},
+{e:"We can't please everyone, so let's prioritize the top three requests.", j:"全員は満足させられないので、上位3つの要望を優先しましょう。", n:"please=満足させる / prioritize=優先順位をつける", lv:2},
+{e:"Bear in mind that the figures are still preliminary.", j:"この数字はまだ暫定値であることをお忘れなく。", n:"bear in mind=心に留めておく / preliminary=暫定の", lv:3},
+{e:"That wraps it up for today — thanks, everyone.", j:"今日はこれで終わりです。皆さんありがとうございました。", n:"that wraps it up=これで終了(締めの定番)", lv:2},
+/* --- Lv1: やさしめ(B1向け・基礎ビジネス) --- */
+{e:"Thanks for joining the call today.", j:"今日は会議に参加してくれてありがとうございます。", n:"Thanks for -ing=~してくれてありがとう。forは弱く「ファ」", lv:1},
+{e:"Could you send me the file after the meeting?", j:"会議のあとでファイルを送ってもらえますか?", n:"Could you=クッジュ / send me=センミ(dが消える)", lv:1},
+{e:"I'll share the schedule with everyone tomorrow.", j:"明日、スケジュールを全員に共有します。", n:"share A with B=AをBに共有。I'llは「アル」に近い音", lv:1},
+{e:"Do you have time to talk this afternoon?", j:"今日の午後、話す時間はありますか?", n:"Do you have=ドゥユハヴ→ジュハヴ。toは弱形", lv:1},
+{e:"Sorry I'm late. The train was delayed.", j:"遅れてすみません。電車が遅延していました。", n:"was delayed=遅延した(受け身)。wasは弱く「ワズ」", lv:1},
+{e:"Let me check my calendar and let you know.", j:"カレンダーを確認して、お知らせします。", n:"let you know=レッチュノウ(超頻出の連結)", lv:1},
+{e:"We have a meeting at ten on Thursday.", j:"木曜の10時に会議があります。", n:"have a=ハヴァ。時刻はat、曜日はon", lv:1},
+{e:"Could you speak a little more slowly, please?", j:"もう少しゆっくり話してもらえますか?", n:"a little more=アリロモア(tがラ行の音に変化)", lv:1},
+{e:"I'll be out of the office next Monday.", j:"来週の月曜は不在にしています。", n:"out of the=アウロヴザ(頻出の連結)", lv:1},
+{e:"Can you hear me okay?", j:"私の声、ちゃんと聞こえていますか?", n:"リモート会議の定番。Can you=キャニュ", lv:1},
+{e:"The report is almost ready. I need one more day.", j:"レポートはほぼ完成です。あと1日ください。", n:"almost=ほぼ / one more day=あと1日", lv:1},
+{e:"Please let me know if you have any questions.", j:"質問があればお知らせください。", n:"let me know=レミノウ / if you=イフュ", lv:1},
+{e:"I'm working from home today.", j:"今日は在宅勤務です。", n:"work from home=在宅勤務(WFH)。fromは弱く「フム」", lv:1},
+{e:"How long will the meeting take?", j:"会議はどのくらいかかりますか?", n:"take=(時間が)かかる", lv:1},
+{e:"We need to finish this by the end of the month.", j:"月末までにこれを終える必要があります。", n:"by=~までに(期限) / end of the=エンドヴザ", lv:1},
+{e:"I sent you the link this morning. Did you get it?", j:"今朝リンクを送りました。届きましたか?", n:"sent you=センチュ / Did you get it=ディジュゲリッ", lv:1},
+{e:"Let's take a short break and come back at three.", j:"少し休憩して、3時に戻りましょう。", n:"take a break=休憩する / back at=バッカッ", lv:1},
+{e:"Who's going to lead the next project?", j:"次のプロジェクトは誰が主導しますか?", n:"Who's going to=フーズゴナ / lead=主導する", lv:1},
+{e:"The customer asked us to change the design.", j:"顧客からデザインの変更を求められました。", n:"ask 人 to do=人に~するよう頼む。asked us=アスクタス", lv:1},
+{e:"I'm not sure about that. Let me ask my manager.", j:"それはちょっと分かりません。上司に確認させてください。", n:"I'm not sure=分からない時の定番。Let me=レミ", lv:1},
+{e:"This is my first time using this system.", j:"このシステムを使うのは初めてです。", n:"first time -ing=~するのは初めて", lv:1},
+{e:"Could you show me how to use this tool?", j:"このツールの使い方を教えてもらえますか?", n:"show me how to=使い方を(見せて)教える。teachより自然", lv:1},
+{e:"The meeting was moved to Friday morning.", j:"会議は金曜の朝に変更されました。", n:"was moved to=~に変更された(受け身)", lv:1},
+{e:"I have another call in ten minutes.", j:"10分後に別の会議があります。", n:"in ten minutes=10分後(このinは「~後」)", lv:1},
+{e:"We got some good feedback from the client.", j:"クライアントから良いフィードバックをもらいました。", n:"got some=ガッサム(tが消える)", lv:1},
+{e:"Is it okay if I leave a little early today?", j:"今日は少し早く帰ってもいいですか?", n:"Is it okay if I=イズィッオケイファイ(丁寧な許可)", lv:1},
+{e:"I'll write it down so I don't forget.", j:"忘れないようにメモしておきます。", n:"write it down=ライリッダウン / so I don't=~しないように", lv:1},
+{e:"The new system is much faster than the old one.", j:"新しいシステムは古いものよりずっと速いです。", n:"much+比較級=ずっと~ / the old one=古いほう", lv:1},
+{e:"Can we talk about the budget first?", j:"まず予算について話せますか?", n:"Can we=キャンウィ / first=まず最初に", lv:1},
+{e:"I read your email, but I have a few questions.", j:"メールを読みましたが、いくつか質問があります。", n:"read(過去形)の発音は「レッド」/ a few=いくつかの", lv:1},
+{e:"Let's decide on a date for the next meeting.", j:"次回の会議の日程を決めましょう。", n:"decide on=~に決める / date=日程", lv:1},
+{e:"He's on vacation until next Wednesday.", j:"彼は来週の水曜まで休暇中です。", n:"on vacation=休暇中 / until=~まで(継続)", lv:1},
+{e:"I think we should ask the team for their ideas.", j:"チームに意見を聞くべきだと思います。", n:"ask A for B=AにBを求める", lv:1},
+{e:"The printer isn't working again.", j:"プリンターがまた動きません。", n:"機械が「動く」はwork。isn't working=故障中", lv:1},
+{e:"Please check the numbers one more time.", j:"数字をもう一度確認してください。", n:"one more time=もう一度", lv:1},
+{e:"We're still waiting for an answer from the vendor.", j:"まだベンダーからの回答を待っています。", n:"wait for=~を待つ / for an=フォラン(連結)", lv:1},
+{e:"I'd like to introduce our new team member.", j:"新しいチームメンバーを紹介します。", n:"I'd like to=I want toの丁寧形。「アイドライクトゥ」", lv:1},
+{e:"It took longer than I expected.", j:"思ったより時間がかかりました。", n:"than I expected=ザナイエクスペクティッド(連結)", lv:1},
+{e:"Could you explain that part again?", j:"その部分をもう一度説明してもらえますか?", n:"explain=説明する / that part=ザッパー(tが消える)", lv:1},
+{e:"I'll call you back in five minutes.", j:"5分後にかけ直します。", n:"call you back=コーリューバック=かけ直す", lv:1},
+{e:"Where should I save this file?", j:"このファイルはどこに保存すればいいですか?", n:"Where should I=ウェアシュダイ。shouldで指示を仰ぐ", lv:1},
+{e:"The office is closed on Friday for the holiday.", j:"金曜は祝日のためオフィスは休みです。", n:"closed=クロウズド / for=~のため(理由)", lv:1},
+{e:"Everyone did a great job on this project.", j:"このプロジェクトでは全員がよくやってくれました。", n:"did a great job=ディダグレイッジョブ(称賛の定番)", lv:1},
+{e:"I agree with you on that point.", j:"その点についてはあなたに賛成です。", n:"agree with 人 on 事=~について人に賛成", lv:1},
+{e:"We don't have enough time today, so let's talk tomorrow.", j:"今日は時間が足りないので、明日話しましょう。", n:"enough time=イナフタイム。soの前で軽く区切る", lv:1},
+{e:"Can you join the meeting from your phone?", j:"スマホから会議に参加できますか?", n:"join=参加する / from your=フロミュア", lv:1},
+{e:"The internet is really slow this morning.", j:"今朝はネットがすごく遅いです。", n:"internetは「イナネッ」とtがほぼ消える", lv:1},
+{e:"Sorry, I sent you the wrong file.", j:"すみません、間違ったファイルを送ってしまいました。", n:"wrong=間違った / sent you=センチュ", lv:1},
+{e:"Let's start with a quick update from each team.", j:"まず各チームからの簡単な近況報告で始めましょう。", n:"start with=~から始める / update=近況報告", lv:1},
+{e:"That sounds good to me.", j:"それでいいと思います。", n:"sounds good=良さそう(同意の定番)。to me=私としては", lv:1}
 ];
 
 const Q = [
@@ -341,6 +420,20 @@ function dayNum(){const d=new Date();return Math.floor(new Date(d.getFullYear(),
 function getBank(){try{return JSON.parse(localStorage.getItem("mec_missbank")||"[]");}catch(e){return [];}}
 function saveBank(b){localStorage.setItem("mec_missbank",JSON.stringify(b));}
 
+/* ディクテーション復習バンク: 聞き取り7割未満の文(英文をキーに保存) */
+function getDBank(){try{return JSON.parse(localStorage.getItem("mec_dbank")||"[]").filter(e=>D.some(d=>d.e===e));}catch(e){return [];}}
+function saveDBank(b){localStorage.setItem("mec_dbank",JSON.stringify(b));}
+
+/* レベル別の出題プール */
+const LV_NAME={1:"やさしめ",2:"標準",3:"チャレンジ"};
+function dictLevel(){return localStorage.getItem("mec_dlevel")||"std";}
+function dictPool(){
+  const lv=dictLevel();
+  const allow=lv==="easy"?[1]:lv==="std"?[1,2]:lv==="hard"?[3]:[1,2,3];
+  const pool=[]; D.forEach((d,i)=>{if(allow.includes(d.lv))pool.push(i);});
+  return pool.length?pool:D.map((_,i)=>i);
+}
+
 function newProg(){
   const carry=getBank().slice(0,3);           // 昨日までの×を最大3問、今日の頭に混ぜる
   const list=[...carry];
@@ -350,12 +443,17 @@ function newProg(){
     if(!list.includes(idx)) list.push(idx);
     i++;
   }
-  return {date:todayStr(), d:0, q:0, miss:[], qlist:list};
+  return {date:todayStr(), d:0, q:0, miss:[], qlist:list, dhist:[], dcur:null, dbankDone:false};
 }
 function loadProg(){
   try{
     const p=JSON.parse(localStorage.getItem("mec_prog")||"null");
-    if(p && p.date===todayStr() && Array.isArray(p.qlist)) return p;
+    if(p && p.date===todayStr() && Array.isArray(p.qlist)){
+      if(!Array.isArray(p.dhist)) p.dhist=[];
+      if(p.dcur===undefined) p.dcur=null;
+      if(p.dbankDone===undefined) p.dbankDone=false;
+      return p;
+    }
   }catch(e){}
   const p=newProg(); saveProg(p); return p;
 }
@@ -431,9 +529,11 @@ function renderRecord(){
 }
 
 /* ================= 画面制御 ================= */
-function show(id){["v-home","v-dict","v-qt","v-break"].forEach(v=>document.getElementById(v).classList.toggle("hide",v!==id));window.scrollTo(0,0);}
+function show(id){["v-home","v-dict","v-qt","v-break","v-list"].forEach(v=>document.getElementById(v).classList.toggle("hide",v!==id));window.scrollTo(0,0);}
 function renderHome(){
   const p=loadProg();
+  document.getElementById("bank-count").textContent=
+    "ディクテーション "+getDBank().length+"文 / 英作文 "+getBank().length+"文";
   document.getElementById("mp-d").textContent=p.d+"/3";
   document.getElementById("mp-q").textContent=p.q+"/10";
   document.getElementById("pb").style.width=Math.round((p.d+p.q)/13*100)+"%";
@@ -448,8 +548,30 @@ function quitToHome(){stopAudio(); goHome();}
 function startDict(){
   const p=loadProg();
   if(p.d>=3) return goHome();
-  dItem=D[(dayNum()*13+p.d*7)%D.length];
+  let idx=p.dcur, isRev=false;
+  if(idx==null || !D[idx]){
+    // 今日まだ出ていないバンク文のみ対象(今日聞き逃した文は後日出題)
+    const bank=getDBank().filter(e=>!p.dhist.includes(D.findIndex(d=>d.e===e)));
+    if(bank.length && !p.dbankDone){
+      // 復習バンクの文を今日の1文目として再出題(1日1文まで)
+      idx=D.findIndex(d=>d.e===bank[0]); p.dbankDone=true; isRev=true;
+    }else{
+      const pool=dictPool(); let t=0;
+      do{ idx=pool[(dayNum()*13+t*7)%pool.length]; t++; }
+      while(p.dhist.includes(idx) && t<500);
+    }
+    p.dcur=idx;
+    if(!p.dhist.includes(idx)) p.dhist.push(idx);
+    saveProg(p);
+  }else{
+    isRev=getDBank().includes(D[idx].e);
+  }
+  dItem=D[idx];
   shCount=0;
+  const tagEl=document.getElementById("d-tag");
+  tagEl.textContent=(LV_NAME[dItem.lv]||"")+(isRev?" / 復習":"");
+  tagEl.className=isRev?"tag rev":"tag";
+  document.getElementById("sh-btn").textContent="再生してシャドーイング (0/5)";
   document.getElementById("d-prog").textContent=`ディクテーション ${p.d+1} / 3`;
   document.getElementById("d-input").value="";
   document.getElementById("d-answer").classList.add("hide");
@@ -471,6 +593,17 @@ function revealD(){
       return ok?w:`<span class="missw">${w}</span>`;
     }).join(" ");
     scoreEl.textContent=`聞き取れた語: ${hit} / ${words.length}(色付きが聞き逃し)`;
+    // 7割未満は復習バンクへ / 7割以上ならバンクから卒業
+    let bank=getDBank();
+    const key=dItem.e, inBank=bank.includes(key);
+    if(hit/words.length<0.7){
+      if(!inBank){bank.push(key); scoreEl.textContent+=" → 後日また出題します";}
+      else scoreEl.textContent+=" → 復習バンクに残ります";
+    }else if(inBank){
+      bank=bank.filter(x=>x!==key);
+      scoreEl.textContent+=" → 復習バンクから卒業!";
+    }
+    saveDBank(bank);
   }else{
     enEl.textContent=dItem.e;
     scoreEl.textContent="";
@@ -487,7 +620,7 @@ function shPlay(){
     shCount>=5?"シャドーイング 5/5 — 完了":`再生してシャドーイング (${shCount}/5)`;
 }
 function finishDictItem(){
-  const p=loadProg(); p.d++; saveProg(p);
+  const p=loadProg(); p.d++; p.dcur=null; saveProg(p);
   completeDay(); stopAudio();
   if(p.d<3){
     breakScreen("1文完了","今日はもう記録されました。続けても、ここでやめてもOKです。",
@@ -543,6 +676,36 @@ function gradeQ(ok){
   }
 }
 
+/* ---- 復習リスト画面 ---- */
+function openList(){
+  const dEl=document.getElementById("ls-dict");
+  const bank=getDBank();
+  if(!bank.length){
+    dEl.innerHTML='<div class="small">いまは空です。答え合わせで聞き取りが7割未満だった文がここに入ります。</div>';
+  }else{
+    dEl.innerHTML=bank.map(e=>{
+      const i=D.findIndex(x=>x.e===e), d=D[i];
+      return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+        <div class="en" style="font-size:16px">${d.e}</div>
+        <div class="ja" style="margin-top:2px">${d.j}</div>
+        <div class="small" style="color:var(--accent)">${d.n}</div>
+        <button class="btn-sub" style="width:auto;padding:8px 18px;font-size:13px" onclick="playText(D[${i}].e)">再生</button>
+      </div>`;
+    }).join("");
+  }
+  const qEl=document.getElementById("ls-q");
+  const qb=getBank();
+  if(!qb.length){
+    qEl.innerHTML='<div class="small">いまは空です。×だった英作文がここに入ります。</div>';
+  }else{
+    qEl.innerHTML=qb.map(i=>`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+        <div class="ja" style="margin-top:0">${Q[i].j}</div>
+        <div class="en" style="font-size:16px;color:var(--accent)">${Q[i].e}</div>
+      </div>`).join("");
+  }
+  show("v-list");
+}
+
 /* ---- 区切り画面 ---- */
 function breakScreen(title, sub, btns, miss){
   document.getElementById("bk-title").textContent=title;
@@ -558,6 +721,16 @@ function breakScreen(title, sub, btns, miss){
 }
 
 /* ================= 初期化 ================= */
+(function initDLevel(){
+  const sel=document.getElementById("dlevel-sel");
+  sel.value=dictLevel();
+  sel.onchange=()=>{
+    localStorage.setItem("mec_dlevel",sel.value);
+    // まだ始めていない「次の1文」があれば、新しいレベルで選び直す
+    const p=loadProg();
+    if(p.dcur!=null){p.dhist=p.dhist.filter(i=>i!==p.dcur); p.dcur=null; saveProg(p);}
+  };
+})();
 loadStreak();
 renderRecord();
 renderHome();
