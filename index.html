@@ -577,13 +577,22 @@ function populateVoices(){
   const hint=vs.find(v=>v.lang.replace("_","-").startsWith(rec));
   document.getElementById("voice-hint").textContent=hint?`今日のおすすめアクセント: ${hint.name} (${rec})`:"";
 }
+/* 選択中の英語ボイス。名前が一致しない場合も必ず英語ボイスにフォールバック */
+function pickEnVoice(){
+  const vs=enVoices();
+  if(!vs.length) return null;
+  const sel=document.getElementById("voice-sel");
+  return vs.find(x=>x.name===sel.value)
+      || vs.find(x=>x.lang.replace("_","-").toLowerCase().startsWith("en-us"))
+      || vs[0];
+}
 function playText(text, rateScale=1){
   if(!window.speechSynthesis) return alert("この環境は音声合成に対応していません");
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  const sel=document.getElementById("voice-sel");
-  const v=enVoices().find(x=>x.name===sel.value);
-  if(v) u.voice=v;
+  u.lang="en-US";                       // 未指定だとページ言語(ja)で読まれてしまう
+  const v=pickEnVoice();
+  if(v){try{u.voice=v; u.lang=v.lang;}catch(e){}}
   u.rate=parseFloat(document.getElementById("rate-sel").value)*rateScale;
   speechSynthesis.speak(u);
 }
@@ -823,10 +832,11 @@ function speakP(text, lang, rateScale){
     if(lang==="ja"){
       u.lang="ja-JP"; u.rate=1.0;
       const jv=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith("ja"));
-      if(jv) u.voice=jv;
+      if(jv){try{u.voice=jv;}catch(e){}}
     }else{
-      const v=enVoices().find(x=>x.name===document.getElementById("voice-sel").value);
-      if(v) u.voice=v;
+      u.lang="en-US";                   // 日本語ボイスが引き継がれるのを防ぐ
+      const v=pickEnVoice();
+      if(v){try{u.voice=v; u.lang=v.lang;}catch(e){}}
       u.rate=parseFloat(document.getElementById("rate-sel").value)*(rateScale||1);
     }
     u.onend=res; u.onerror=res;
