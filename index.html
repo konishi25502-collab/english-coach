@@ -193,10 +193,12 @@
       <div id="q-answer" class="hide">
         <div class="big-en en" style="color:var(--accent)" id="q-en"></div>
         <button class="btn-sub" onclick="playText(qItem.e)">発音を聞く</button>
-        <div class="row">
+        <div class="row" id="q-grade-row">
           <button class="btn-ok" onclick="gradeQ(true)">言えた ○</button>
           <button class="btn-ng" onclick="gradeQ(false)">言えなかった ×</button>
         </div>
+        <div class="note hide" id="q-note"></div>
+        <button class="btn-main hide" id="q-next-btn" onclick="advanceQ()">次へ →</button>
       </div>
     </div>
     <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
@@ -444,63 +446,63 @@ const D = [
 ];
 
 const Q = [
-{j:"弊社には世界中にたくさんのオフィスがあります。", e:"Our company has many offices around the world.", t:"一致・複数"},
-{j:"スケジュールにいくつか変更があります。", e:"There are some changes in the schedule.", t:"一致・複数"},
-{j:"彼は毎朝すべてのメールをチェックします。", e:"He checks all his emails every morning.", t:"三単現"},
-{j:"各オフィスに担当者が1人います。", e:"There is one person in charge at each office.", t:"一致・複数"},
-{j:"多くの社員がこのツールを毎日使っています。", e:"A lot of employees use this tool every day.", t:"一致・複数"},
-{j:"このチームにはエンジニアが5人います。", e:"There are five engineers on this team.", t:"一致・複数"},
-{j:"彼女はまだその変更に気づいていません。", e:"She isn't aware of the change yet.", t:"三単現・前置詞"},
-{j:"うちの部署は3つのプロジェクトを抱えています。", e:"Our department has three projects.", t:"一致"},
-{j:"今日中にそのレポートを送ります。", e:"I'll send you the report by end of day.", t:"前置詞"},
-{j:"その件は田中さんに確認して折り返します。", e:"I'll check with Tanaka-san and get back to you.", t:"前置詞"},
-{j:"これは実際の業務でAIを活用するための良いアイデアです。", e:"This is a good idea for using AI in actual business situations.", t:"前置詞・冠詞"},
-{j:"会議は10時に始まります。", e:"The meeting starts at ten.", t:"冠詞・三単現"},
-{j:"私はIT部門で働いています。", e:"I work in the IT department.", t:"冠詞・前置詞"},
-{j:"その問題については金曜日に話しましょう。", e:"Let's talk about the issue on Friday.", t:"前置詞"},
-{j:"結果は来週の月曜までに共有します。", e:"I'll share the results by next Monday.", t:"前置詞"},
-{j:"彼は今、別の会議に出ています。", e:"He's in another meeting right now.", t:"冠詞"},
-{j:"その資料をまだ受け取っていません。", e:"I haven't received the material yet.", t:"現在完了・語順"},
-{j:"その件はもう対応済みです。", e:"We've already taken care of it.", t:"現在完了"},
-{j:"先週お送りしたファイルはご覧いただけましたか?", e:"Have you had a chance to look at the file I sent last week?", t:"現在完了・関係詞"},
-{j:"今、原因を調査しているところです。", e:"We're looking into the cause right now.", t:"時制"},
-{j:"3年前からこの会社で働いています。", e:"I've been working at this company for three years.", t:"現在完了"},
-{j:"彼が反対していなければ、プロジェクトはもっと早く進んでいたでしょう。", e:"If he hadn't disagreed, the project would have moved much faster.", t:"仮定法"},
-{j:"その問題はもっと早く報告すべきでした。", e:"We should have reported the issue much earlier.", t:"should have"},
-{j:"もっと時間があれば、全案件をレビューできるのですが。", e:"If we had more time, we could review all the cases.", t:"仮定法"},
-{j:"予算が足りなければ、範囲を狭めるべきだと思います。", e:"If the budget isn't enough, I think we should narrow the scope.", t:"条件文"},
-{j:"私もその会議に参加できていたらよかったのですが。", e:"I wish I could have joined that meeting.", t:"wish"},
-{j:"会議の機会がもっと増えるといいと思っています。", e:"I hope we'll have more opportunities for meetings.", t:"wish/hope"},
-{j:"プロジェクトがうまくいくことを願っています。", e:"I hope the project goes well.", t:"wish/hope・三単現"},
-{j:"画面を共有させてください。", e:"Let me share my screen.", t:"会議定型"},
-{j:"すみません、聞き取れませんでした。もう一度お願いできますか?", e:"Sorry, I didn't catch that. Could you say that again?", t:"会議定型"},
-{j:"もう少し詳しく説明していただけますか?", e:"Could you elaborate on that a little more?", t:"会議定型"},
-{j:"次の議題に移りましょう。", e:"Let's move on to the next item.", t:"会議定型"},
-{j:"その件は一旦保留にして、後で戻りましょう。", e:"Let's park that for now and come back to it later.", t:"会議定型"},
-{j:"ご質問があれば遠慮なく割り込んでください。", e:"Feel free to jump in if you have any questions.", t:"会議定型"},
-{j:"議事録は会議の後すぐに送ります。", e:"I'll send out the minutes right after the meeting.", t:"会議定型"},
-{j:"東京チームにも共有してもらえますか?", e:"Could you loop in the Tokyo team?", t:"会議定型"},
-{j:"時間がなくなってきたので、まとめに入りましょう。", e:"We're running out of time, so let's wrap up.", t:"会議定型"},
-{j:"おっしゃることはもっともですが、私は少し違う見方をしています。", e:"That's a fair point, but I see it a little differently.", t:"会議定型"},
-{j:"ざっくりした見積もりで構いません。", e:"A ballpark figure is fine.", t:"会議定型・冠詞"},
-{j:"その作業を引き受ける余裕はありますか?", e:"Do you have the bandwidth to take that on?", t:"会議定型"},
+{j:"弊社には世界中にたくさんのオフィスがあります。", e:"Our company has many offices around the world.", t:"一致・複数", n:"会社は単数扱い→has / around the world=世界中に"},
+{j:"スケジュールにいくつか変更があります。", e:"There are some changes in the schedule.", t:"一致・複数", n:"変更が複数→There are / in the schedule=予定に"},
+{j:"彼は毎朝すべてのメールをチェックします。", e:"He checks all his emails every morning.", t:"三単現", n:"三単現のs: checks / every morningは冠詞なし"},
+{j:"各オフィスに担当者が1人います。", e:"There is one person in charge at each office.", t:"一致・複数", n:"in charge=担当の / each+単数名詞→There is"},
+{j:"多くの社員がこのツールを毎日使っています。", e:"A lot of employees use this tool every day.", t:"一致・複数", n:"a lot of+複数主語→動詞は原形use(sなし)"},
+{j:"このチームにはエンジニアが5人います。", e:"There are five engineers on this team.", t:"一致・複数", n:"チームの一員はon this team(inではなくon)"},
+{j:"彼女はまだその変更に気づいていません。", e:"She isn't aware of the change yet.", t:"三単現・前置詞", n:"be aware of=~に気づいている / yet=まだ(否定文で)"},
+{j:"うちの部署は3つのプロジェクトを抱えています。", e:"Our department has three projects.", t:"一致", n:"department(単数)→has"},
+{j:"今日中にそのレポートを送ります。", e:"I'll send you the report by end of day.", t:"前置詞", n:"send 人 物=人に物を送る / by end of day=今日中に"},
+{j:"その件は田中さんに確認して折り返します。", e:"I'll check with Tanaka-san and get back to you.", t:"前置詞", n:"check with 人=人に確認する / get back to=折り返す"},
+{j:"これは実際の業務でAIを活用するための良いアイデアです。", e:"This is a good idea for using AI in actual business situations.", t:"前置詞・冠詞", n:"for -ing=~するための / situationは可算名詞"},
+{j:"会議は10時に始まります。", e:"The meeting starts at ten.", t:"冠詞・三単現", n:"時刻はat / 特定の会議→The meeting / 三単現starts"},
+{j:"私はIT部門で働いています。", e:"I work in the IT department.", t:"冠詞・前置詞", n:"部署はin the ~ department(theを忘れずに)"},
+{j:"その問題については金曜日に話しましょう。", e:"Let's talk about the issue on Friday.", t:"前置詞", n:"talk about=~について話す / 曜日はon"},
+{j:"結果は来週の月曜までに共有します。", e:"I'll share the results by next Monday.", t:"前置詞", n:"by=~までに(期限) / next Mondayにonは不要"},
+{j:"彼は今、別の会議に出ています。", e:"He's in another meeting right now.", t:"冠詞", n:"in a meeting=会議中 / another=別の(an+other)"},
+{j:"その資料をまだ受け取っていません。", e:"I haven't received the material yet.", t:"現在完了・語順", n:"現在完了の否定+yet=まだ~していない"},
+{j:"その件はもう対応済みです。", e:"We've already taken care of it.", t:"現在完了", n:"take care of=対応する / already+現在完了"},
+{j:"先週お送りしたファイルはご覧いただけましたか?", e:"Have you had a chance to look at the file I sent last week?", t:"現在完了・関係詞", n:"have a chance to=~する機会 / the file I sent=関係詞の省略"},
+{j:"今、原因を調査しているところです。", e:"We're looking into the cause right now.", t:"時制", n:"look into=調査する / 現在進行形で「今まさに」"},
+{j:"3年前からこの会社で働いています。", e:"I've been working at this company for three years.", t:"現在完了", n:"現在完了進行形+for=~の間ずっと / at this company"},
+{j:"彼が反対していなければ、プロジェクトはもっと早く進んでいたでしょう。", e:"If he hadn't disagreed, the project would have moved much faster.", t:"仮定法", n:"仮定法過去完了: If+had過去分詞, would have過去分詞"},
+{j:"その問題はもっと早く報告すべきでした。", e:"We should have reported the issue much earlier.", t:"should have", n:"should have+過去分詞=~すべきだった(後悔)"},
+{j:"もっと時間があれば、全案件をレビューできるのですが。", e:"If we had more time, we could review all the cases.", t:"仮定法", n:"仮定法過去: If+過去形, could+原形(今と違う仮定)"},
+{j:"予算が足りなければ、範囲を狭めるべきだと思います。", e:"If the budget isn't enough, I think we should narrow the scope.", t:"条件文", n:"現実的な条件はIf+現在形 / narrow=狭める(動詞)"},
+{j:"私もその会議に参加できていたらよかったのですが。", e:"I wish I could have joined that meeting.", t:"wish", n:"I wish+could have過去分詞=~できていたらよかった"},
+{j:"会議の機会がもっと増えるといいと思っています。", e:"I hope we'll have more opportunities for meetings.", t:"wish/hope", n:"実現可能な願いはhope(wishは非現実)/ opportunities for"},
+{j:"プロジェクトがうまくいくことを願っています。", e:"I hope the project goes well.", t:"wish/hope・三単現", n:"hope+that節は現在形でOK / 三単現goes / go well=うまくいく"},
+{j:"画面を共有させてください。", e:"Let me share my screen.", t:"会議定型", n:"Let me+原形=~させてください(会議の定番)"},
+{j:"すみません、聞き取れませんでした。もう一度お願いできますか?", e:"Sorry, I didn't catch that. Could you say that again?", t:"会議定型", n:"catch=聞き取る / say that again=もう一度言う"},
+{j:"もう少し詳しく説明していただけますか?", e:"Could you elaborate on that a little more?", t:"会議定型", n:"elaborate on=~を詳しく述べる(onを忘れずに)"},
+{j:"次の議題に移りましょう。", e:"Let's move on to the next item.", t:"会議定型", n:"move on to=~に移る(onとtoの2つセット)"},
+{j:"その件は一旦保留にして、後で戻りましょう。", e:"Let's park that for now and come back to it later.", t:"会議定型", n:"park=一時保留にする / for now=今のところ"},
+{j:"ご質問があれば遠慮なく割り込んでください。", e:"Feel free to jump in if you have any questions.", t:"会議定型", n:"feel free to=遠慮なく~して / jump in=会話に入る"},
+{j:"議事録は会議の後すぐに送ります。", e:"I'll send out the minutes right after the meeting.", t:"会議定型", n:"send out=一斉に送る / right after=直後に"},
+{j:"東京チームにも共有してもらえますか?", e:"Could you loop in the Tokyo team?", t:"会議定型", n:"loop in=巻き込む・共有に入れる"},
+{j:"時間がなくなってきたので、まとめに入りましょう。", e:"We're running out of time, so let's wrap up.", t:"会議定型", n:"run out of=尽きる / wrap up=まとめる・終える"},
+{j:"おっしゃることはもっともですが、私は少し違う見方をしています。", e:"That's a fair point, but I see it a little differently.", t:"会議定型", n:"fair point=もっともな指摘 / see it differently=違う見方をする"},
+{j:"ざっくりした見積もりで構いません。", e:"A ballpark figure is fine.", t:"会議定型・冠詞", n:"ballpark figure=概算 / A is fine.=~で構いません"},
+{j:"その作業を引き受ける余裕はありますか?", e:"Do you have the bandwidth to take that on?", t:"会議定型", n:"bandwidth=(人の)余裕 / take on=引き受ける"},
 
 /* --- 仕事関連: 生成AI・Salesforce・DX人材育成 --- */
-{j:"各部署にAI活用の担当者が1人います。", e:"There is one person in charge of AI in each department.", t:"一致・前置詞", g:"work"},
-{j:"多くの社員が毎日生成AIを使っています。", e:"A lot of employees use generative AI every day.", t:"一致", g:"work"},
-{j:"そのデータをSalesforceに入力してもらえますか?", e:"Could you enter the data into Salesforce?", t:"前置詞", g:"work"},
-{j:"研修は火曜日の午後2時に始まります。", e:"The training starts at 2 p.m. on Tuesday.", t:"前置詞・三単現", g:"work"},
-{j:"AIの回答は、使う前に必ず確認してください。", e:"Please always check the AI's answers before using them.", t:"前置詞・代名詞", g:"work"},
-{j:"彼はチームにAIツールの使い方を教えています。", e:"He teaches his team how to use AI tools.", t:"三単現", g:"work"},
-{j:"このプロジェクトの目的は、データ入力の時間を減らすことです。", e:"The goal of this project is to reduce the time for data entry.", t:"冠詞・前置詞", g:"work"},
-{j:"ガイドラインはイントラネットで見られます。", e:"The guidelines are available on the intranet.", t:"冠詞・前置詞", g:"work"},
-{j:"機密情報をAIツールに入れてはいけません。", e:"You must not put confidential information into AI tools.", t:"前置詞", g:"work"},
-{j:"先月から新しいシステムを使っています。", e:"We've been using the new system since last month.", t:"現在完了", g:"work"},
-{j:"問題があれば、AI推進チームに連絡してください。", e:"If you have any problems, please contact the AI team.", t:"前置詞(不要)", g:"work"},
-{j:"その研修には約30人が参加しました。", e:"About thirty people joined the training.", t:"一致", g:"work"},
-{j:"AIの活用事例を社内で共有しています。", e:"We share AI use cases within the company.", t:"前置詞", g:"work"},
-{j:"図面は新しいシステムで検索できます。", e:"You can search for drawings in the new system.", t:"前置詞", g:"work"},
-{j:"経営層の支持を得ることが最初のステップです。", e:"Getting support from management is the first step.", t:"動名詞主語・一致", g:"work"}
+{j:"各部署にAI活用の担当者が1人います。", e:"There is one person in charge of AI in each department.", t:"一致・前置詞", g:"work", n:"in charge of=~の担当 / each+単数→There is"},
+{j:"多くの社員が毎日生成AIを使っています。", e:"A lot of employees use generative AI every day.", t:"一致", g:"work", n:"a lot of+複数主語→use(sなし)/ every dayは冠詞なし"},
+{j:"そのデータをSalesforceに入力してもらえますか?", e:"Could you enter the data into Salesforce?", t:"前置詞", g:"work", n:"enter A into B=AをBに入力する(入力先はinto)"},
+{j:"研修は火曜日の午後2時に始まります。", e:"The training starts at 2 p.m. on Tuesday.", t:"前置詞・三単現", g:"work", n:"時刻はat、曜日はon / 三単現starts"},
+{j:"AIの回答は、使う前に必ず確認してください。", e:"Please always check the AI's answers before using them.", t:"前置詞・代名詞", g:"work", n:"before -ing=~する前に / 複数のanswers→them"},
+{j:"彼はチームにAIツールの使い方を教えています。", e:"He teaches his team how to use AI tools.", t:"三単現", g:"work", n:"teach 人 how to=人に~の仕方を教える / 三単現teaches"},
+{j:"このプロジェクトの目的は、データ入力の時間を減らすことです。", e:"The goal of this project is to reduce the time for data entry.", t:"冠詞・前置詞", g:"work", n:"The goal is to+原形=目的は~すること / the time for=~のための時間"},
+{j:"ガイドラインはイントラネットで見られます。", e:"The guidelines are available on the intranet.", t:"冠詞・前置詞", g:"work", n:"available=利用できる / ネット上はon / guidelines複数→are"},
+{j:"機密情報をAIツールに入れてはいけません。", e:"You must not put confidential information into AI tools.", t:"前置詞", g:"work", n:"must not=禁止 / put A into B / informationは不可算"},
+{j:"先月から新しいシステムを使っています。", e:"We've been using the new system since last month.", t:"現在完了", g:"work", n:"現在完了進行形+since=~からずっと"},
+{j:"問題があれば、AI推進チームに連絡してください。", e:"If you have any problems, please contact the AI team.", t:"前置詞(不要)", g:"work", n:"contactは他動詞: contact toは誤り(前置詞不要)"},
+{j:"その研修には約30人が参加しました。", e:"About thirty people joined the training.", t:"一致", g:"work", n:"about=約 / peopleは複数扱い"},
+{j:"AIの活用事例を社内で共有しています。", e:"We share AI use cases within the company.", t:"前置詞", g:"work", n:"within=~の内部で(社内で)/ use case=活用事例"},
+{j:"図面は新しいシステムで検索できます。", e:"You can search for drawings in the new system.", t:"前置詞", g:"work", n:"search for=~を探す(探す対象にはforが必要)"},
+{j:"経営層の支持を得ることが最初のステップです。", e:"Getting support from management is the first step.", t:"動名詞主語・一致", g:"work", n:"動名詞主語は単数扱い→is / support from=~からの支持"}
 ];
 
 /* ================= 基本ヘルパー ================= */
@@ -765,6 +767,9 @@ function startQT(){
   document.getElementById("q-ja").textContent=qItem.j;
   document.getElementById("q-answer").classList.add("hide");
   document.getElementById("q-reveal-btn").classList.remove("hide");
+  document.getElementById("q-note").classList.add("hide");
+  document.getElementById("q-next-btn").classList.add("hide");
+  document.getElementById("q-grade-row").classList.remove("hide");
   show("v-qt");
 }
 function revealQ(){
@@ -780,6 +785,19 @@ function gradeQ(ok){
   else{if(!bank.includes(idx)) bank.push(idx); p.miss.push(Q[idx].e);}
   saveBank(bank);
   p.q++; saveProg(p); stopAudio();
+  if(!ok && qItem.n){
+    // ×のときはワンポイント解説を見てから次へ
+    const noteEl=document.getElementById("q-note");
+    noteEl.textContent=qItem.n;
+    noteEl.classList.remove("hide");
+    document.getElementById("q-grade-row").classList.add("hide");
+    document.getElementById("q-next-btn").classList.remove("hide");
+    return;
+  }
+  advanceQ();
+}
+function advanceQ(){
+  const p=loadProg();
   if(p.q>=10){
     const okN=10-p.miss.length;
     breakScreen("今日のメニュー、すべて完了","正解 "+okN+"/10。×だった文は明日の最初に再出題されます。",
@@ -940,6 +958,7 @@ function openList(){
     qEl.innerHTML=qb.map(i=>`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
         <div class="ja" style="margin-top:0">${Q[i].j}</div>
         <div class="en" style="font-size:16px;color:var(--accent)">${Q[i].e}</div>
+        ${Q[i].n?`<div class="small" style="color:var(--accent)">${Q[i].n}</div>`:""}
       </div>`).join("");
   }
   show("v-list");
