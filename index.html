@@ -104,6 +104,13 @@
       <div class="small" id="voice-hint"></div>
     </div>
     <div class="card">
+      <h2>目標 — 完璧じゃなくていい、届く数字を</h2>
+      <div class="small" style="margin-top:0" id="g-week-label"></div>
+      <div class="pbar"><i id="g-week-bar"></i></div>
+      <div class="small" id="g-month-label"></div>
+      <div class="pbar"><i id="g-month-bar"></i></div>
+    </div>
+    <div class="card">
       <h2 id="rec-title">きろく</h2>
       <div class="stats">
         <div class="stat"><b id="st-streak">0</b><span>連続日数</span></div>
@@ -142,6 +149,23 @@
         <option value="std" selected>標準 — やさしめ+定番表現 (128文)</option>
         <option value="mix">ミックス — 全レベル (190文)</option>
         <option value="hard">チャレンジ — イディオム中心 (62文)</option>
+      </select>
+      <label>週の目標日数</label>
+      <select id="goal-wd-sel">
+        <option value="2">週2日</option>
+        <option value="3">週3日</option>
+        <option value="4" selected>週4日</option>
+        <option value="5">週5日</option>
+        <option value="6">週6日</option>
+        <option value="7">毎日</option>
+      </select>
+      <label>月の目標時間</label>
+      <select id="goal-mh-sel">
+        <option value="2">2時間</option>
+        <option value="3">3時間</option>
+        <option value="5" selected>5時間</option>
+        <option value="8">8時間</option>
+        <option value="12">12時間</option>
       </select>
       <label>仕事関連の文(生成AI・Salesforce・DX)</label>
       <select id="work-sel">
@@ -650,6 +674,7 @@ function renderHome(){
   const p=loadProg();
   updateListenTotal();
   updateTimeTotal();
+  renderGoals();
   document.getElementById("bank-count").textContent=
     "ディクテーション "+getDBank().length+"文 / 英作文 "+getBank().length+"文";
   document.getElementById("mp-d").textContent=Math.min(p.d,3)+"/3"+(p.d>3?" +"+(p.d-3):"");
@@ -743,7 +768,7 @@ function shPlay(){
 }
 function finishDictItem(){
   addSeen(dItem.e);
-  bumpCnt("mec_cnt_d");
+  bumpCnt("mec_cnt_d"); addTime(2);
   const p=loadProg(); p.d++; p.dcur=null; saveProg(p);
   completeDay(); stopAudio();
   if(p.d<3){
@@ -813,7 +838,7 @@ function gradeQ(ok){
   if(ok){bank=bank.filter(x=>x!==idx);}
   else{if(!bank.includes(idx)) bank.push(idx); p.miss.push(Q[idx].e);}
   saveBank(bank);
-  bumpCnt("mec_cnt_q");
+  bumpCnt("mec_cnt_q"); addTime(20/60);
   p.q++; saveProg(p); stopAudio();
   if(!ok && qItem.n){
     // ×のときはワンポイント解説を見てから次へ
@@ -857,6 +882,35 @@ let lsSession=0, lsPaused=false, lsQueue=[], lsPos=0, lsWakeLock=null;
 function getSeen(){try{return JSON.parse(localStorage.getItem("mec_seen")||"[]").filter(e=>D.some(d=>d.e===e));}catch(e){return [];}}
 function addSeen(e){const s=getSeen(); if(!s.includes(e)){s.push(e); localStorage.setItem("mec_seen",JSON.stringify(s));}}
 function listenTotal(){return parseInt(localStorage.getItem("mec_listen")||"0");}
+
+/* 月別の学習時間(分)と目標 */
+function monthKey(){return todayStr().slice(0,7);}
+function addTime(mins){
+  const k="mec_min_"+monthKey();
+  localStorage.setItem(k,String((parseFloat(localStorage.getItem(k))||0)+mins));
+}
+function monthMinutes(){return parseFloat(localStorage.getItem("mec_min_"+monthKey()))||0;}
+function fmtMin(mins){
+  const h=Math.floor(mins/60), m=Math.round(mins%60);
+  return h>0?h+"時間"+(m>0?m+"分":""):m+"分";
+}
+function weekStartStr(){
+  const d=new Date(); d.setDate(d.getDate()-d.getDay());  // 日曜始まり(カレンダーと同じ)
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function renderGoals(){
+  const wd=parseInt(localStorage.getItem("mec_goal_wd")||"4");
+  const mh=parseFloat(localStorage.getItem("mec_goal_mh")||"5");
+  const days=getDays(), ws=weekStartStr(), today=todayStr();
+  const wdone=days.filter(x=>x>=ws&&x<=today).length;
+  document.getElementById("g-week-label").textContent=
+    "今週 "+wdone+" / "+wd+"日"+(wdone>=wd?" — 達成!":"(あと"+(wd-wdone)+"日)");
+  document.getElementById("g-week-bar").style.width=Math.min(100,Math.round(wdone/wd*100))+"%";
+  const mm=monthMinutes(), goalMin=mh*60;
+  document.getElementById("g-month-label").textContent=
+    "今月 "+fmtMin(mm)+" / "+mh+"時間"+(mm>=goalMin?" — 達成!":"(あと"+fmtMin(goalMin-mm)+")");
+  document.getElementById("g-month-bar").style.width=Math.min(100,Math.round(mm/goalMin*100))+"%";
+}
 
 /* 積み上げ学習時間(理論値): 1文=2分 / 1問=20秒 / ながら聞き1文=30秒 */
 function cntD(){return parseInt(localStorage.getItem("mec_cnt_d")||"0");}
@@ -947,6 +1001,7 @@ async function listenLoop(sid){
     }
     if(sid!==lsSession)return;
     localStorage.setItem("mec_listen",String(listenTotal()+1));
+    addTime(30/60);
     updateListenTotal();
     lsPos++;
     await lsWait(1400);
@@ -1040,6 +1095,21 @@ function breakScreen(title, sub, btns, miss){
     localStorage.setItem("mec_cnt_q",String(cntQ()+past*5));
   }
   localStorage.setItem("mec_seeded","1");
+})();
+/* 今月分の時間も過去記録日から引き継ぎ(一度だけ実行) */
+(function seedMonthTime(){
+  if(localStorage.getItem("mec_seeded2")) return;
+  const past=getDays().filter(d=>d<todayStr() && d.slice(0,7)===monthKey()).length;
+  if(past>0) addTime(past*(2*2+5*20/60));   // 1日 = 2文+5問 ≒ 5.7分
+  localStorage.setItem("mec_seeded2","1");
+})();
+(function initGoals(){
+  const ws=document.getElementById("goal-wd-sel");
+  ws.value=localStorage.getItem("mec_goal_wd")||"4";
+  ws.onchange=()=>{localStorage.setItem("mec_goal_wd",ws.value); renderGoals();};
+  const ms=document.getElementById("goal-mh-sel");
+  ms.value=localStorage.getItem("mec_goal_mh")||"5";
+  ms.onchange=()=>{localStorage.setItem("mec_goal_mh",ms.value); renderGoals();};
 })();
 (function initDLevel(){
   const resetPick=()=>{ // まだ始めていない「次の1文」があれば、新しい設定で選び直す
