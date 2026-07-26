@@ -100,7 +100,7 @@
         <button class="btn-main" id="btn-q" onclick="startQT()">やる</button>
       </div>
       <div class="pbar"><i id="pb"></i></div>
-      <div class="small">1文終えた時点で、その日はカレンダーに記録されます。疲れた日はそれだけで十分です。</div>
+      <div class="small">1文終えた時点で、その日はカレンダーに記録されます。疲れた日はそれだけで十分です。しっかりやりたい日は、完了後も「もっとやる」で好きなだけ追加できます。</div>
       <div class="small" id="voice-hint"></div>
     </div>
     <div class="card">
@@ -649,12 +649,12 @@ function renderHome(){
   updateListenTotal();
   document.getElementById("bank-count").textContent=
     "ディクテーション "+getDBank().length+"文 / 英作文 "+getBank().length+"文";
-  document.getElementById("mp-d").textContent=p.d+"/3";
-  document.getElementById("mp-q").textContent=p.q+"/10";
-  document.getElementById("pb").style.width=Math.round((p.d+p.q)/13*100)+"%";
+  document.getElementById("mp-d").textContent=Math.min(p.d,3)+"/3"+(p.d>3?" +"+(p.d-3):"");
+  document.getElementById("mp-q").textContent=Math.min(p.q,10)+"/10"+(p.q>10?" +"+(p.q-10):"");
+  document.getElementById("pb").style.width=Math.round((Math.min(p.d,3)+Math.min(p.q,10))/13*100)+"%";
   const bd=document.getElementById("btn-d"), bq=document.getElementById("btn-q");
-  bd.disabled=(p.d>=3); bd.textContent=(p.d>=3)?"完了":"やる";
-  bq.disabled=(p.q>=10); bq.textContent=(p.q>=10)?"完了":"やる";
+  bd.textContent=(p.d>=3)?"もっとやる":"やる"; bd.className=(p.d>=3)?"btn-sub":"btn-main";
+  bq.textContent=(p.q>=10)?"もっとやる":"やる"; bq.className=(p.q>=10)?"btn-sub":"btn-main";
 }
 function goHome(){renderHome(); show("v-home");}
 function quitToHome(){stopAudio(); goHome();}
@@ -662,12 +662,12 @@ function quitToHome(){stopAudio(); goHome();}
 /* ---- ディクテーション(1文単位) ---- */
 function startDict(){
   const p=loadProg();
-  if(p.d>=3) return goHome();
   let idx=p.dcur, isRev=false;
   if(idx==null || !D[idx]){
     // 今日まだ出ていないバンク文のみ対象(今日聞き逃した文は後日出題)
     const bank=getDBank().filter(e=>!p.dhist.includes(D.findIndex(d=>d.e===e)));
-    if(bank.length && !p.dbankDone){
+    // 通常は1日1文まで。おかわり(4文目以降)ではバンクを積極消化
+    if(bank.length && (!p.dbankDone || p.d>=3)){
       // 復習バンクの文を今日の1文目として再出題(1日1文まで)
       idx=D.findIndex(d=>d.e===bank[0]); p.dbankDone=true; isRev=true;
     }else{
@@ -690,7 +690,8 @@ function startDict(){
   tagEl.textContent=(LV_NAME[dItem.lv]||"")+(dItem.g==="work"?" / 仕事":"")+(isRev?" / 復習":"");
   tagEl.className=isRev?"tag rev":"tag";
   document.getElementById("sh-btn").textContent="再生してシャドーイング (0/5)";
-  document.getElementById("d-prog").textContent=`ディクテーション ${p.d+1} / 3`;
+  document.getElementById("d-prog").textContent=
+    p.d<3?`ディクテーション ${p.d+1} / 3`:`ディクテーション おかわり ${p.d-2}文目`;
   document.getElementById("d-input").value="";
   document.getElementById("d-answer").classList.add("hide");
   document.getElementById("d-reveal-btn").classList.remove("hide");
@@ -746,24 +747,48 @@ function finishDictItem(){
       [["もう1文やる("+p.d+"/3)","startDict()","btn-main"],
        ["瞬間英作文へ","startQT()","btn-sub"],
        ["ホームへ","goHome()","btn-ghost"]]);
+  }else if(p.d===3){
+    breakScreen("ディクテーション完了","今日のノルマ達成です。しっかりやりたい日は、ここからおかわりできます。",
+      [["おかわり(もう1文)","startDict()","btn-main"],
+       ["瞬間英作文へ","startQT()","btn-sub"],
+       ["ホームへ","goHome()","btn-ghost"]]);
   }else{
-    breakScreen("ディクテーション完了","残りは瞬間英作文だけです。隙間時間にどうぞ。",
-      [["瞬間英作文へ","startQT()","btn-main"],
+    breakScreen("おかわり "+(p.d-3)+"文 完了","いいペースです。復習バンクの文から優先的に出しています。",
+      [["さらにもう1文","startDict()","btn-main"],
+       ["瞬間英作文へ","startQT()","btn-sub"],
        ["ホームへ","goHome()","btn-ghost"]]);
   }
 }
 
 /* ---- 瞬間英作文(1問単位・5問で区切り・×は翌日以降に再出題) ---- */
+/* おかわり用: qlistを1問ずつ延長(復習バンク→仕事優先→一般の順) */
+function extendQlist(p){
+  const used=new Set(p.qlist), dn=dayNum();
+  const bank=getBank().filter(i=>!used.has(i));
+  if(bank.length){p.qlist.push(bank[0]); return;}
+  if(workPref()){
+    const wq=[]; Q.forEach((q,ix)=>{if(q.g==="work"&&!used.has(ix))wq.push(ix);});
+    if(wq.length){p.qlist.push(wq[(dn*7+p.qlist.length)%wq.length]); return;}
+  }
+  let i=0, idx=(dn*13+p.qlist.length*3)%Q.length;
+  while(i<Q.length){
+    const c=(dn*13+(p.qlist.length+i)*3)%Q.length;
+    if(!used.has(c)){idx=c; break;}
+    i++;
+  }
+  p.qlist.push(idx);   // 全問出題済みの日は繰り返しもOK
+}
 function startQT(){
   const p=loadProg();
-  if(p.q>=10) return goHome();
+  if(p.q>=p.qlist.length){extendQlist(p); saveProg(p);}
   const idx=p.qlist[p.q];
   qItem=Q[idx];
   const isReview=getBank().includes(idx);
   const tagEl=document.getElementById("q-tag");
   tagEl.textContent=qItem.t+(qItem.g==="work"?" / 仕事":"")+(isReview?" / 復習":"");
   tagEl.className=isReview?"tag rev":"tag";
-  document.getElementById("q-prog").textContent=`瞬間英作文 ${p.q+1} / 10`;
+  document.getElementById("q-prog").textContent=
+    p.q<10?`瞬間英作文 ${p.q+1} / 10`:`瞬間英作文 おかわり ${p.q-9}問目`;
   document.getElementById("q-ja").textContent=qItem.j;
   document.getElementById("q-answer").classList.add("hide");
   document.getElementById("q-reveal-btn").classList.remove("hide");
@@ -798,10 +823,19 @@ function gradeQ(ok){
 }
 function advanceQ(){
   const p=loadProg();
-  if(p.q>=10){
-    const okN=10-p.miss.length;
-    breakScreen("今日のメニュー、すべて完了","正解 "+okN+"/10。×だった文は明日の最初に再出題されます。",
-      [["ホームへ","goHome()","btn-main"]], p.miss);
+  if(p.q===10){
+    const okN=10-Math.min(p.miss.length,10);
+    breakScreen("今日のメニュー、すべて完了","正解 "+okN+"/10。×だった文は明日の最初に再出題されます。しっかりやりたい日はおかわりをどうぞ。",
+      [["おかわり(もっとやる)","startQT()","btn-main"],
+       ["ホームへ","goHome()","btn-ghost"]], p.miss);
+  }else if(p.q>10){
+    if((p.q-10)%10===0){
+      breakScreen("おかわり "+(p.q-10)+"問 完了","いいペースです。復習バンクの問題から優先的に出しています。",
+        [["さらにつづける","startQT()","btn-main"],
+         ["ホームへ","goHome()","btn-ghost"]]);
+    }else{
+      startQT();
+    }
   }else if(p.q%5===0){
     breakScreen("5問完了","残り5問。今やっても、あとの隙間時間でもOKです。",
       [["つづける(あと5問)","startQT()","btn-main"],
