@@ -5,3 +5,4 @@ test*.js
 add_levels.py
 shot-*.png
 add_qnotes.py
+test-extra.js
