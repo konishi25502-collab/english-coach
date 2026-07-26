@@ -1031,6 +1031,16 @@ function breakScreen(title, sub, btns, miss){
 }
 
 /* ================= 初期化 ================= */
+/* 過去分の引き継ぎ(一度だけ実行): 時間カウント導入前の記録日 × (2文+5問) を初期値に加算 */
+(function seedPastTime(){
+  if(localStorage.getItem("mec_seeded")) return;
+  const past=getDays().filter(d=>d<todayStr()).length;
+  if(past>0){
+    localStorage.setItem("mec_cnt_d",String(cntD()+past*2));
+    localStorage.setItem("mec_cnt_q",String(cntQ()+past*5));
+  }
+  localStorage.setItem("mec_seeded","1");
+})();
 (function initDLevel(){
   const resetPick=()=>{ // まだ始めていない「次の1文」があれば、新しい設定で選び直す
     const p=loadProg();
