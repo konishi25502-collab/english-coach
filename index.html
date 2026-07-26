@@ -111,7 +111,9 @@
         <div class="stat"><b id="st-total">0</b><span>累計</span></div>
       </div>
       <div class="cal" id="cal"></div>
-      <div class="small">連続が途切れても、塗った日は消えません。ゼロの日を減らすことがすべてです。</div>
+      <div class="small" id="time-total" style="color:var(--gold);font-weight:600"></div>
+      <div class="small" id="time-detail"></div>
+      <div class="small">連続が途切れても、塗った日と積み上げ時間は消えません。ゼロの日を減らすことがすべてです。</div>
     </div>
     <div class="card">
       <h2>復習バンク</h2>
@@ -647,6 +649,7 @@ function show(id){["v-home","v-dict","v-qt","v-break","v-list","v-listen"].forEa
 function renderHome(){
   const p=loadProg();
   updateListenTotal();
+  updateTimeTotal();
   document.getElementById("bank-count").textContent=
     "ディクテーション "+getDBank().length+"文 / 英作文 "+getBank().length+"文";
   document.getElementById("mp-d").textContent=Math.min(p.d,3)+"/3"+(p.d>3?" +"+(p.d-3):"");
@@ -740,6 +743,7 @@ function shPlay(){
 }
 function finishDictItem(){
   addSeen(dItem.e);
+  bumpCnt("mec_cnt_d");
   const p=loadProg(); p.d++; p.dcur=null; saveProg(p);
   completeDay(); stopAudio();
   if(p.d<3){
@@ -809,6 +813,7 @@ function gradeQ(ok){
   if(ok){bank=bank.filter(x=>x!==idx);}
   else{if(!bank.includes(idx)) bank.push(idx); p.miss.push(Q[idx].e);}
   saveBank(bank);
+  bumpCnt("mec_cnt_q");
   p.q++; saveProg(p); stopAudio();
   if(!ok && qItem.n){
     // ×のときはワンポイント解説を見てから次へ
@@ -852,6 +857,19 @@ let lsSession=0, lsPaused=false, lsQueue=[], lsPos=0, lsWakeLock=null;
 function getSeen(){try{return JSON.parse(localStorage.getItem("mec_seen")||"[]").filter(e=>D.some(d=>d.e===e));}catch(e){return [];}}
 function addSeen(e){const s=getSeen(); if(!s.includes(e)){s.push(e); localStorage.setItem("mec_seen",JSON.stringify(s));}}
 function listenTotal(){return parseInt(localStorage.getItem("mec_listen")||"0");}
+
+/* 積み上げ学習時間(理論値): 1文=2分 / 1問=20秒 / ながら聞き1文=30秒 */
+function cntD(){return parseInt(localStorage.getItem("mec_cnt_d")||"0");}
+function cntQ(){return parseInt(localStorage.getItem("mec_cnt_q")||"0");}
+function bumpCnt(key){localStorage.setItem(key,String(parseInt(localStorage.getItem(key)||"0")+1));}
+function updateTimeTotal(){
+  const mins=cntD()*2 + cntQ()*(20/60) + listenTotal()*(30/60);
+  const h=Math.floor(mins/60), m=Math.round(mins%60);
+  document.getElementById("time-total").textContent=
+    "積み上げ学習時間(理論値): "+(h>0?h+"時間":"")+m+"分";
+  document.getElementById("time-detail").textContent=
+    "内訳 — ディクテーション "+cntD()+"文 / 英作文 "+cntQ()+"問 / ながら聞き "+listenTotal()+"文";
+}
 function updateListenTotal(){
   const t=listenTotal();
   document.getElementById("lp-total").textContent=t?("これまでに聞いた文: "+t+"文"):"";
