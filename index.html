@@ -725,17 +725,41 @@ function startDict(){
   document.getElementById("d-reveal-btn").classList.remove("hide");
   show("v-dict");
 }
-function normWord(w){return w.toLowerCase().replace(/[^a-z0-9']/g,"");}
+/* カール型アポストロフィ(iPhoneのスマート句読点)をまっすぐな'に正規化してから比較 */
+function normWord(w){return w.toLowerCase().replace(/[’‘ʼ`´]/g,"'").replace(/[^a-z0-9']/g,"");}
+function bareWord(w){return w.replace(/'/g,"");}
+/* 短縮形の展開: we've = we have なども正解扱いにする */
+function expandContraction(nw){
+  if(nw==="won't") return [["will","not"]];
+  if(nw==="can't") return [["cannot"],["can","not"]];
+  if(nw==="let's") return [["let","us"]];
+  let m=nw.match(/^([a-z]+)n't$/);
+  if(m) return [[m[1],"not"]];
+  m=nw.match(/^([a-z]+)'(ve|re|ll|m|d|s)$/);
+  if(m){
+    const map={ve:["have"],re:["are"],ll:["will"],m:["am"],d:["would","had"],s:["is","has"]};
+    return map[m[2]].map(x=>[m[1],x]);
+  }
+  return null;
+}
 function revealD(){
   const typedRaw=document.getElementById("d-input").value.trim();
   const enEl=document.getElementById("d-en"), scoreEl=document.getElementById("d-score");
   if(typedRaw){
     // 聞き逃した単語をテラコッタでハイライト
-    const heard=new Set(typedRaw.split(/\s+/).map(normWord).filter(Boolean));
+    const toks=typedRaw.split(/\s+/).map(normWord).filter(Boolean);
+    const heard=new Set(toks);
+    const heardBare=new Set(toks.map(bareWord));
+    const wordOk=w=>{
+      const nw=normWord(w);
+      if(heard.has(nw) || heardBare.has(bareWord(nw))) return true;  // アポストロフィ表記ゆれを許容
+      const ex=expandContraction(nw);                                 // we've = we have なども正解
+      return !!(ex && ex.some(pair=>pair.every(t=>heardBare.has(t))));
+    };
     const words=dItem.e.split(/\s+/);
     let hit=0;
     enEl.innerHTML=words.map(w=>{
-      const ok=heard.has(normWord(w));
+      const ok=wordOk(w);
       if(ok) hit++;
       return ok?w:`<span class="missw">${w}</span>`;
     }).join(" ");
