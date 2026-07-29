@@ -124,9 +124,11 @@
       <div class="small">連続が途切れても、塗った日と積み上げ時間は消えません。ゼロの日を減らすことがすべてです。</div>
     </div>
     <div class="card">
-      <h2>復習バンク</h2>
+      <h2>復習バンク — 苦手だけを狙い撃ち</h2>
       <div class="small" style="margin-top:0" id="bank-count"></div>
-      <button class="btn-sub" onclick="openList()">たまっている文を見る</button>
+      <div class="small">×だった英作文と聞き取り7割未満の文が自動で溜まり、毎日のメニューにも自動で混ざります。○/7割以上で卒業。ここからやった分も通常の練習と同じく、きろくと積み上げ時間にカウントされます。</div>
+      <button class="btn-main" onclick="startReview()">復習からやる</button>
+      <button class="btn-ghost" onclick="openList()">一覧を見る</button>
     </div>
     <div class="card">
       <h2>ながら聞き — 通勤・散歩のお供に</h2>
@@ -259,6 +261,7 @@
       <div class="small">明日の最初に再出題されます。○が出たら卒業します。</div>
       <div id="ls-q"></div>
     </div>
+    <button class="btn-main" onclick="startReview()">この復習をやる</button>
     <button class="btn-ghost" style="font-size:13px;padding:10px" onclick="quitToHome()">← ホームへ</button>
   </section>
 
@@ -1087,6 +1090,36 @@ function pauseListen(){
 function skipListen(){
   lsPos++; lsSession++; stopAudio();
   if(!lsPaused) listenLoop(lsSession);
+}
+
+/* ---- 復習セッション: バンクの文を通常の練習フローで出題(記録にカウントされる) ---- */
+function startReview(){
+  const p=loadProg();
+  // 1) ディクテーションのバンクで今日まだ出ていない文があれば、それを次の1文に
+  const dbank=getDBank().map(e=>D.findIndex(d=>d.e===e)).filter(i=>i>=0 && !p.dhist.includes(i));
+  if(dbank.length){
+    p.dcur=dbank[0];
+    if(!p.dhist.includes(dbank[0])) p.dhist.push(dbank[0]);
+    saveProg(p);
+    return startDict();
+  }
+  // 2) 英作文のバンクの問題を次の1問として出す(今日のリストにあれば先頭へ引き上げ、なければ差し込み)
+  const qbankAll=getBank();
+  if(qbankAll.length){
+    const remaining=p.qlist.slice(p.q);
+    const pos=remaining.findIndex(i=>qbankAll.includes(i));
+    if(pos>0){const it=p.qlist.splice(p.q+pos,1)[0]; p.qlist.splice(p.q,0,it); saveProg(p);}
+    else if(pos<0){p.qlist.splice(p.q,0,qbankAll[0]); saveProg(p);}
+    return startQT();
+  }
+  // 3) 今日ぶんの復習は消化済み or バンクが空
+  if(getDBank().length || getBank().length){
+    breakScreen("今日の復習はぜんぶ消化済み","バンクに残っている文は、明日以降のメニューに自動で出てきます。",
+      [["ふつうの練習をやる","startDict()","btn-main"],["ホームへ","goHome()","btn-ghost"]]);
+  }else{
+    breakScreen("復習バンクは空です","素晴らしい状態です。×や聞き取り7割未満の文が出ると、ここに溜まります。",
+      [["ふつうの練習をやる","startDict()","btn-main"],["ホームへ","goHome()","btn-ghost"]]);
+  }
 }
 
 /* ---- 復習リスト画面 ---- */
