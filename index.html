@@ -120,6 +120,7 @@
       <div class="cal" id="cal"></div>
       <div class="small" id="time-total" style="color:var(--gold);font-weight:600"></div>
       <div class="small" id="time-detail"></div>
+      <div class="small" id="hist-list" style="margin-top:10px"></div>
       <div class="small">連続が途切れても、塗った日と積み上げ時間は消えません。ゼロの日を減らすことがすべてです。</div>
     </div>
     <div class="card">
@@ -792,7 +793,7 @@ function shPlay(){
 }
 function finishDictItem(){
   addSeen(dItem.e);
-  bumpCnt("mec_cnt_d"); addTime(2);
+  bumpHist("d");
   const p=loadProg(); p.d++; p.dcur=null; saveProg(p);
   completeDay(); stopAudio();
   if(p.d<3){
@@ -862,7 +863,7 @@ function gradeQ(ok){
   if(ok){bank=bank.filter(x=>x!==idx);}
   else{if(!bank.includes(idx)) bank.push(idx); p.miss.push(Q[idx].e);}
   saveBank(bank);
-  bumpCnt("mec_cnt_q"); addTime(20/60);
+  bumpHist("q");
   p.q++; saveProg(p); stopAudio();
   if(!ok && qItem.n){
     // ×のときはワンポイント解説を見てから次へ
@@ -907,13 +908,19 @@ function getSeen(){try{return JSON.parse(localStorage.getItem("mec_seen")||"[]")
 function addSeen(e){const s=getSeen(); if(!s.includes(e)){s.push(e); localStorage.setItem("mec_seen",JSON.stringify(s));}}
 function listenTotal(){return parseInt(localStorage.getItem("mec_listen")||"0");}
 
-/* 月別の学習時間(分)と目標 */
+/* 月別の学習記録: {"2026-07":{d:文数,q:問数,l:ながら聞き文数},...} が唯一の情報源。
+   積み上げ時間(全月合計)も今月の目標進捗も、ここから導出するので乖離しない */
 function monthKey(){return todayStr().slice(0,7);}
-function addTime(mins){
-  const k="mec_min_"+monthKey();
-  localStorage.setItem(k,String((parseFloat(localStorage.getItem(k))||0)+mins));
+function getHist(){try{return JSON.parse(localStorage.getItem("mec_hist")||"{}");}catch(e){return {};}}
+function saveHist(h){localStorage.setItem("mec_hist",JSON.stringify(h));}
+function bumpHist(kind){const h=getHist(),k=monthKey();h[k]=h[k]||{d:0,q:0,l:0};h[k][kind]++;saveHist(h);}
+function monthStats(mk){return getHist()[mk]||{d:0,q:0,l:0};}
+function minutesOf(s){return s.d*2 + s.q*(20/60) + s.l*(30/60);}
+function lifetimeStats(){
+  const t={d:0,q:0,l:0};
+  Object.values(getHist()).forEach(s=>{t.d+=s.d||0;t.q+=s.q||0;t.l+=s.l||0;});
+  return t;
 }
-function monthMinutes(){return parseFloat(localStorage.getItem("mec_min_"+monthKey()))||0;}
 function fmtMin(mins){
   const h=Math.floor(mins/60), m=Math.round(mins%60);
   return h>0?h+"時間"+(m>0?m+"分":""):m+"分";
@@ -930,10 +937,11 @@ function renderGoals(){
   document.getElementById("g-week-label").textContent=
     "今週 "+wdone+" / "+wd+"日"+(wdone>=wd?" — 達成!":"(あと"+(wd-wdone)+"日)");
   document.getElementById("g-week-bar").style.width=Math.min(100,Math.round(wdone/wd*100))+"%";
-  const mm=monthMinutes(), goalMin=mh*60;
+  const mm=minutesOf(monthStats(monthKey())), goalMin=mh*60;
   document.getElementById("g-month-label").textContent=
     "今月 "+fmtMin(mm)+" / "+mh+"時間"+(mm>=goalMin?" — 達成!":"(あと"+fmtMin(goalMin-mm)+")");
   document.getElementById("g-month-bar").style.width=Math.min(100,Math.round(mm/goalMin*100))+"%";
+  renderHist();
 }
 
 /* 積み上げ学習時間(理論値): 1文=2分 / 1問=20秒 / ながら聞き1文=30秒 */
@@ -941,12 +949,29 @@ function cntD(){return parseInt(localStorage.getItem("mec_cnt_d")||"0");}
 function cntQ(){return parseInt(localStorage.getItem("mec_cnt_q")||"0");}
 function bumpCnt(key){localStorage.setItem(key,String(parseInt(localStorage.getItem(key)||"0")+1));}
 function updateTimeTotal(){
-  const mins=cntD()*2 + cntQ()*(20/60) + listenTotal()*(30/60);
-  const h=Math.floor(mins/60), m=Math.round(mins%60);
+  const t=lifetimeStats(), mins=minutesOf(t);
   document.getElementById("time-total").textContent=
-    "積み上げ学習時間(理論値): "+(h>0?h+"時間":"")+m+"分";
+    "積み上げ学習時間(理論値): "+fmtMin(mins);
   document.getElementById("time-detail").textContent=
-    "内訳 — ディクテーション "+cntD()+"文 / 英作文 "+cntQ()+"問 / ながら聞き "+listenTotal()+"文";
+    "内訳 — ディクテーション "+t.d+"文 / 英作文 "+t.q+"問 / ながら聞き "+t.l+"文";
+}
+/* 月別のあゆみ */
+function renderHist(){
+  const h=getHist(), days=getDays(), mk=monthKey();
+  const goalMin=parseFloat(localStorage.getItem("mec_goal_mh")||"5")*60;
+  const months=new Set(Object.keys(h).filter(m=>minutesOf(h[m])>0));
+  days.forEach(d=>months.add(d.slice(0,7)));
+  months.add(mk);
+  const list=[...months].sort().reverse();
+  const el=document.getElementById("hist-list");
+  el.innerHTML="<b>月別のあゆみ</b><br>"+list.map(m=>{
+    const s=h[m]||{d:0,q:0,l:0};
+    const dcnt=days.filter(x=>x.startsWith(m)).length;
+    const mins=minutesOf(s);
+    const y=m.slice(0,4);
+    const label=(y!==mk.slice(0,4)?y+"年":"")+parseInt(m.slice(5,7))+"月"+(m===mk?"(今月)":"");
+    return label+" — "+dcnt+"日・"+fmtMin(mins)+(mins>=goalMin?" ◎目標達成":"");
+  }).join("<br>");
 }
 function updateListenTotal(){
   const t=listenTotal();
@@ -1025,7 +1050,7 @@ async function listenLoop(sid){
     }
     if(sid!==lsSession)return;
     localStorage.setItem("mec_listen",String(listenTotal()+1));
-    addTime(30/60);
+    bumpHist("l");
     updateListenTotal();
     lsPos++;
     await lsWait(1400);
@@ -1120,12 +1145,13 @@ function breakScreen(title, sub, btns, miss){
   }
   localStorage.setItem("mec_seeded","1");
 })();
-/* 今月分の時間も過去記録日から引き継ぎ(一度だけ実行) */
-(function seedMonthTime(){
-  if(localStorage.getItem("mec_seeded2")) return;
-  const past=getDays().filter(d=>d<todayStr() && d.slice(0,7)===monthKey()).length;
-  if(past>0) addTime(past*(2*2+5*20/60));   // 1日 = 2文+5問 ≒ 5.7分
-  localStorage.setItem("mec_seeded2","1");
+/* 記録を月別構造(mec_hist)へ移行(一度だけ実行)。従来の累計はすべて今月分として引き継ぐ */
+(function migrateHist(){
+  if(localStorage.getItem("mec_hist")) return;
+  const t={d:cntD(),q:cntQ(),l:listenTotal()};
+  const h={};
+  if(t.d||t.q||t.l) h[monthKey()]=t;
+  saveHist(h);
 })();
 (function initGoals(){
   const ws=document.getElementById("goal-wd-sel");
