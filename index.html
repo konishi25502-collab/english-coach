@@ -133,6 +133,11 @@
     <div class="card">
       <h2>ながら聞き — 通勤・散歩のお供に</h2>
       <div class="small" style="margin-top:0">学習済みの文(復習バンク優先)を連続自動再生します。意味を知っている文を繰り返し聞くのが、音声知覚を鍛える近道です。</div>
+      <label>出題範囲</label>
+      <select id="lp-scope">
+        <option value="seen" selected>学習済み中心 — 意味を知っている文だけ(復習)</option>
+        <option value="all">レベル全体 — 未学習の文も流す(予習込み)</option>
+      </select>
       <label>再生パターン</label>
       <select id="lp-pat">
         <option value="meaning" selected>英→日→英(意味確認型)</option>
@@ -984,21 +989,29 @@ function updateListenTotal(){
 function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 /* キュー: 復習バンク → 学習済み(シャッフル)。少ないうちは現在レベルの文で補う */
-function buildListenQueue(){
-  const bank=getDBank();
-  const seen=shuffleArr(getSeen().filter(e=>!bank.includes(e)));
-  let q=[...bank,...seen];
-  if(q.length<10){
-    let pool=dictPool().map(i=>D[i].e).filter(e=>!q.includes(e));
-    if(workPref()){
-      const w=shuffleArr(pool.filter(e=>{const d=D.find(x=>x.e===e);return d&&d.g==="work";}));
-      const o=shuffleArr(pool.filter(e=>!w.includes(e)));
-      pool=[...w,...o];
-    }else{
-      shuffleArr(pool);
+function workFirst(arr){
+  if(!workPref()) return arr;
+  const w=arr.filter(e=>{const d=D.find(x=>x.e===e);return d&&d.g==="work";});
+  return [...w,...arr.filter(e=>!w.includes(e))];
+}
+/* prevLast: 直前に流れた文。周をまたいで同じ文が連続しないようにする */
+function buildListenQueue(prevLast){
+  const scope=localStorage.getItem("mec_lscope")||"seen";
+  const bank=shuffleArr(getDBank().slice());
+  let rest;
+  if(scope==="all"){
+    // レベル全体: 現在レベルの全文からシャッフル(予習込み)
+    rest=workFirst(shuffleArr(dictPool().map(i=>D[i].e).filter(e=>!bank.includes(e))));
+  }else{
+    // 学習済み中心: 意味を知っている文だけ。少ないうちはレベルの文で補充
+    rest=shuffleArr(getSeen().filter(e=>!bank.includes(e)));
+    if(bank.length+rest.length<10){
+      const fill=workFirst(shuffleArr(dictPool().map(i=>D[i].e).filter(e=>!bank.includes(e)&&!rest.includes(e))));
+      rest=rest.concat(fill.slice(0,20-bank.length-rest.length));
     }
-    q=q.concat(pool.slice(0,20-q.length));
   }
+  const q=[...bank,...rest];
+  if(prevLast && q.length>1 && q[0]===prevLast){q.push(q.shift());}
   return q;
 }
 
@@ -1024,7 +1037,7 @@ function lsWait(ms){return new Promise(res=>setTimeout(res,ms));}
 async function listenLoop(sid){
   const enEl=document.getElementById("l-en"), jaEl=document.getElementById("l-ja");
   while(sid===lsSession){
-    if(lsPos>=lsQueue.length){lsQueue=buildListenQueue(); lsPos=0;}
+    if(lsPos>=lsQueue.length){lsQueue=buildListenQueue(lsQueue[lsQueue.length-1]); lsPos=0;}
     const item=D.find(d=>d.e===lsQueue[lsPos]);
     if(!item){lsPos++; continue;}
     const isRev=getDBank().includes(item.e);
@@ -1185,6 +1198,11 @@ function breakScreen(title, sub, btns, miss){
   const h={};
   if(t.d||t.q||t.l) h[monthKey()]=t;
   saveHist(h);
+})();
+(function initListenScope(){
+  const sel=document.getElementById("lp-scope");
+  sel.value=localStorage.getItem("mec_lscope")||"seen";
+  sel.onchange=()=>localStorage.setItem("mec_lscope",sel.value);
 })();
 (function initGoals(){
   const ws=document.getElementById("goal-wd-sel");
