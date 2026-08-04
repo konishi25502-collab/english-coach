@@ -658,13 +658,32 @@ function loadProg(){
 function saveProg(p){localStorage.setItem("mec_prog",JSON.stringify(p));}
 
 /* ================= 音声 ================= */
-function enVoices(){return window.speechSynthesis?speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith("en")):[];}
+/* Apple等の「ジョーク用ボイス」(壊れた音・再生エラーの原因)は除外する */
+const NOVELTY_VOICES=["albert","bad news","bahh","bells","boing","bubbles","cellos","good news",
+  "jester","organ","superstar","trinoids","whisper","wobble","zarvox","fred","kathy","ralph",
+  "junior","deranged","hysterical"];
+/* 品質の良い定番ボイスを一覧の先頭に */
+const PREFERRED_VOICES=["samantha","alex","ava","allison","susan","serena","karen","daniel",
+  "arthur","martha","moira","rishi","tessa","aaron","nicky","google","microsoft"];
+function voiceRank(v){
+  const n=v.name.toLowerCase();
+  const i=PREFERRED_VOICES.findIndex(p=>n.startsWith(p)||n.includes(p));
+  return i<0?PREFERRED_VOICES.length:i;
+}
+function enVoices(){
+  if(!window.speechSynthesis) return [];
+  return speechSynthesis.getVoices()
+    .filter(v=>v.lang.toLowerCase().replace("_","-").startsWith("en"))
+    .filter(v=>{const n=v.name.toLowerCase();return !NOVELTY_VOICES.some(b=>n===b||n.startsWith(b+" "));})
+    .sort((a,b)=>voiceRank(a)-voiceRank(b)||a.name.localeCompare(b.name));
+}
 function populateVoices(){
   const sel=document.getElementById("voice-sel");
   const vs=enVoices();
   if(!vs.length){sel.innerHTML="<option>音声が見つかりません</option>";return;}
   const saved=localStorage.getItem("mec_voice");
   sel.innerHTML=vs.map(v=>`<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
+  if(saved && !vs.some(v=>v.name===saved)){localStorage.setItem("mec_voice",vs[0].name);}  // 除外された声を保存していた場合は置き換え
   if(saved && vs.some(v=>v.name===saved)) sel.value=saved;
   sel.onchange=()=>localStorage.setItem("mec_voice",sel.value);
   const day=new Date().getDay();
