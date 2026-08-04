@@ -175,10 +175,11 @@
         <option value="8">8時間</option>
         <option value="12">12時間</option>
       </select>
-      <label>仕事関連の文(生成AI・Salesforce・DX)</label>
+      <label>優先して出題するジャンル</label>
       <select id="work-sel">
-        <option value="0">全体に自然に混ぜる</option>
-        <option value="1">優先して多めに出題する</option>
+        <option value="0">なし — 全体に自然に混ぜる</option>
+        <option value="1">仕事関連(生成AI・Salesforce・DX)</option>
+        <option value="trn">研修準備(議論・発表・自己紹介)</option>
       </select>
       <label>スピード</label>
       <select id="rate-sel">
@@ -477,7 +478,49 @@ const D = [
 {e:"Poor data quality keeps coming back to bite us.", j:"データ品質の悪さが、後になって何度も私たちを苦しめています。", n:"come back to bite=後で祟る / keep -ing=何度も~する", lv:3, g:"work"},
 {e:"We piloted the chatbot, but it fell short of expectations.", j:"チャットボットを試験導入しましたが、期待には届きませんでした。", n:"fall short of=~に届かない・期待外れに終わる", lv:3, g:"work"},
 {e:"Getting the veterans on board is half the battle.", j:"ベテラン勢を巻き込めれば、半分は成功したようなものです。", n:"get 人 on board=賛同させる / half the battle=山場・大部分", lv:3, g:"work"},
-{e:"Treat the guidelines as a living document and revise them as the technology evolves.", j:"ガイドラインは生きた文書として、技術の進化に合わせて改訂してください。", n:"living document=随時更新される文書 / evolve=進化する", lv:3, g:"work"}
+{e:"Treat the guidelines as a living document and revise them as the technology evolves.", j:"ガイドラインは生きた文書として、技術の進化に合わせて改訂してください。", n:"living document=随時更新される文書 / evolve=進化する", lv:3, g:"work"},
+
+/* --- 研修準備: 自己紹介・議論・グループワーク・発表・質疑 --- */
+{e:"Let me briefly introduce myself before we start.", j:"始める前に、簡単に自己紹介させてください。", n:"briefly=手短に / Let me+原形=~させてください", lv:1, g:"trn"},
+{e:"I'm responsible for our company's AI strategy and governance.", j:"私は会社のAI戦略とガバナンスを担当しています。", n:"be responsible for=~を担当している(自己紹介の定番)", lv:2, g:"trn"},
+{e:"I'm looking forward to working with all of you this week.", j:"今週、皆さんと一緒に学べるのを楽しみにしています。", n:"look forward to -ing(toの後は動名詞!)", lv:1, g:"trn"},
+{e:"Could you tell us a little about your background?", j:"あなたの経歴について少し教えてもらえますか?", n:"background=経歴・バックグラウンド", lv:1, g:"trn"},
+{e:"This is my first time joining a training in English, so please bear with me.", j:"英語での研修は初めてなので、温かく見守ってください。", n:"bear with me=(至らなくても)辛抱してお付き合いください", lv:2, g:"trn"},
+{e:"From my perspective, the biggest challenge is getting buy-in from the field.", j:"私の見方では、最大の課題は現場の賛同を得ることです。", n:"from my perspective=私の見方では(意見の切り出し)", lv:2, g:"trn"},
+{e:"I'd argue that speed matters more than perfection in this case.", j:"この場合、完璧さよりスピードが重要だと私は主張したいです。", n:"I'd argue that=あえて言えば~だ / matter=重要である", lv:2, g:"trn"},
+{e:"Building on what you said, I think we should start small.", j:"今のご意見に乗っかると、小さく始めるべきだと思います。", n:"building on ~=~に付け加えて(議論の接続の定番)", lv:2, g:"trn"},
+{e:"That's an interesting point. Could you elaborate a little?", j:"面白い視点ですね。もう少し詳しく聞かせてもらえますか?", n:"elaborate=詳しく述べる(質問の定番)", lv:1, g:"trn"},
+{e:"I see your point, but I'm not fully convinced.", j:"おっしゃることは分かりますが、完全には納得していません。", n:"I see your point, but=丁寧な反論の入り方 / convinced=納得して", lv:2, g:"trn"},
+{e:"I partly agree, though I'd add one thing.", j:"部分的には賛成ですが、一つ付け加えたいです。", n:"partly agree=部分的に賛成 / though=~ではあるが", lv:2, g:"trn"},
+{e:"Let me push back on that a little.", j:"その点には少し反論させてください。", n:"push back on=~に反論する", lv:3, g:"trn"},
+{e:"Playing devil's advocate, what if the opposite is true?", j:"あえて逆の立場から言うと、逆が正しいとしたらどうでしょう?", n:"play devil's advocate=あえて反対意見を言う / what if=もし~なら", lv:3, g:"trn"},
+{e:"Can I jump in here for a second?", j:"ここでちょっと割り込んでもいいですか?", n:"jump in=会話に入る / for a second=ちょっとだけ", lv:1, g:"trn"},
+{e:"Sorry, go ahead — I didn't mean to cut you off.", j:"すみません、どうぞ。話を遮るつもりはありませんでした。", n:"go ahead=どうぞ / cut off=話を遮る / didn't mean to=つもりはなかった", lv:3, g:"trn"},
+{e:"Let's hear from someone who hasn't spoken yet.", j:"まだ発言していない人の意見を聞いてみましょう。", n:"hear from=~から意見を聞く(ファシリの定番)", lv:2, g:"trn"},
+{e:"So if I understand you correctly, you're saying we need clearer criteria.", j:"正しく理解できていれば、より明確な基準が必要だということですね。", n:"if I understand you correctly=理解の確認 / criteria=基準(複数形)", lv:2, g:"trn"},
+{e:"Maybe we should agree to disagree and move on.", j:"見解の相違ということにして、先へ進みましょうか。", n:"agree to disagree=意見の不一致を認め合う", lv:3, g:"trn"},
+{e:"Could we take a step back and look at the bigger picture?", j:"一歩引いて、全体像を見てみませんか?", n:"take a step back=一歩引く / the bigger picture=全体像", lv:2, g:"trn"},
+{e:"Who would like to kick things off?", j:"どなたから口火を切りますか?", n:"kick things off=(議論などを)始める", lv:3, g:"trn"},
+{e:"Shall we split the roles? I can be the timekeeper.", j:"役割分担しましょうか。私はタイムキーパーをやります。", n:"split the roles=役割を分ける / Shall we=~しましょうか", lv:2, g:"trn"},
+{e:"We have twenty minutes, so let's spend ten on ideas and ten on wrap-up.", j:"20分あるので、10分をアイデア出しに、10分をまとめに使いましょう。", n:"spend 時間 on=~に時間を使う", lv:2, g:"trn"},
+{e:"Let's capture the key points on the whiteboard.", j:"要点をホワイトボードに書き出しましょう。", n:"capture=書き留める(グループワーク頻出)", lv:2, g:"trn"},
+{e:"Can someone volunteer to present our discussion?", j:"私たちの議論を発表してくれる人はいますか?", n:"volunteer to=自発的に~を引き受ける", lv:2, g:"trn"},
+{e:"We're a bit off track — let's come back to the main question.", j:"少し話がそれているので、本題に戻りましょう。", n:"off track=本筋から外れて / come back to=~に戻る", lv:3, g:"trn"},
+{e:"Today I'd like to walk you through our team's proposal.", j:"今日はチームの提案を順を追ってご説明します。", n:"walk you through=順に説明する(発表の導入)", lv:2, g:"trn"},
+{e:"Let me start with the background, then move on to our recommendation.", j:"まず背景から始めて、次に提言に移ります。", n:"start with → move on to=発表の構成を示す型", lv:2, g:"trn"},
+{e:"The key takeaway is that small pilots beat big plans.", j:"一番のポイントは、大きな計画より小さな実験が勝るということです。", n:"takeaway=持ち帰るべき要点 / beat=~に勝る", lv:3, g:"trn"},
+{e:"I'll keep it short and leave plenty of time for questions.", j:"手短にして、質問の時間をたっぷり残します。", n:"keep it short=手短にする / plenty of=たっぷりの", lv:2, g:"trn"},
+{e:"That brings me to the end of my presentation. Any questions?", j:"以上で発表を終わります。ご質問はありますか?", n:"That brings me to the end=締めの定番フレーズ", lv:1, g:"trn"},
+{e:"That's a great question. Let me think for a second.", j:"いい質問ですね。少し考えさせてください。", n:"質疑応答で時間を稼ぐ万能フレーズ", lv:1, g:"trn"},
+{e:"I don't have the exact figure, but I can follow up later.", j:"正確な数字は持っていませんが、後ほど回答します。", n:"exact figure=正確な数字 / follow up=追って対応する", lv:2, g:"trn"},
+{e:"If there are no further questions, I'll hand it back to the facilitator.", j:"他に質問がなければ、ファシリテーターにお返しします。", n:"further=さらなる / hand it back to=~に(進行を)戻す", lv:2, g:"trn"},
+{e:"Sorry, could you speak up a little? It's hard to hear in the back.", j:"すみません、もう少し大きな声で話してもらえますか?後ろだと聞こえにくいです。", n:"speak up=大きな声で話す / in the back=後方では", lv:2, g:"trn"},
+{e:"Could you go over that framework one more time?", j:"そのフレームワークをもう一度説明してもらえますか?", n:"go over=(説明を)ざっと見直す", lv:2, g:"trn"},
+{e:"Just to clarify, is the deadline for the group assignment Friday?", j:"確認ですが、グループ課題の締切は金曜日ですか?", n:"just to clarify=確認ですが / assignment=課題", lv:2, g:"trn"},
+{e:"What does that acronym stand for?", j:"その略語は何の略ですか?", n:"stand for=~を表す・~の略である / acronym=頭字語", lv:2, g:"trn"},
+{e:"Could you give us a concrete example?", j:"具体例を挙げていただけますか?", n:"concrete example=具体例(講義での質問の定番)", lv:1, g:"trn"},
+{e:"I didn't quite follow the last part. Could you rephrase it?", j:"最後の部分がよく分かりませんでした。言い換えていただけますか?", n:"follow=(話に)ついていく / rephrase=言い換える", lv:2, g:"trn"},
+{e:"Is it okay to ask questions as we go, or should we save them for the end?", j:"質問は途中でしてもいいですか、それとも最後まで取っておくべきですか?", n:"as we go=進行しながら / save ~ for the end=最後まで取っておく", lv:2, g:"trn"}
 ];
 
 const Q = [
@@ -537,7 +580,19 @@ const Q = [
 {j:"その研修には約30人が参加しました。", e:"About thirty people joined the training.", t:"一致", g:"work", n:"about=約 / peopleは複数扱い"},
 {j:"AIの活用事例を社内で共有しています。", e:"We share AI use cases within the company.", t:"前置詞", g:"work", n:"within=~の内部で(社内で)/ use case=活用事例"},
 {j:"図面は新しいシステムで検索できます。", e:"You can search for drawings in the new system.", t:"前置詞", g:"work", n:"search for=~を探す(探す対象にはforが必要)"},
-{j:"経営層の支持を得ることが最初のステップです。", e:"Getting support from management is the first step.", t:"動名詞主語・一致", g:"work", n:"動名詞主語は単数扱い→is / support from=~からの支持"}
+{j:"経営層の支持を得ることが最初のステップです。", e:"Getting support from management is the first step.", t:"動名詞主語・一致", g:"work", n:"動名詞主語は単数扱い→is / support from=~からの支持"},
+
+/* --- 研修準備 --- */
+{j:"簡単に自己紹介させてください。", e:"Let me briefly introduce myself.", t:"研修定型", g:"trn", n:"Let me+原形=~させてください / briefly=手短に"},
+{j:"私はAI戦略とガバナンスを担当しています。", e:"I'm in charge of AI strategy and governance.", t:"前置詞", g:"trn", n:"in charge of=~を担当して(ofを忘れずに)"},
+{j:"基本的には賛成ですが、一つ付け加えたいです。", e:"I basically agree, but I'd like to add one thing.", t:"研修定型", g:"trn", n:"basically=基本的には / I'd like to=~したい(丁寧)"},
+{j:"具体例を挙げていただけますか?", e:"Could you give us a concrete example?", t:"冠詞", g:"trn", n:"a concrete example=可算名詞なのでaを忘れずに"},
+{j:"私たちのグループの結論を発表します。", e:"I'll present our group's conclusion.", t:"所有格", g:"trn", n:"group's=グループの(アポストロフィ+s)"},
+{j:"最後の部分がよく分かりませんでした。言い換えていただけますか?", e:"I didn't quite follow the last part. Could you rephrase it?", t:"研修定型", g:"trn", n:"not quite=完全には~ない / rephrase=言い換える"},
+{j:"確認ですが、課題の締切は金曜日ですか?", e:"Just to clarify, is the deadline for the assignment Friday?", t:"前置詞・冠詞", g:"trn", n:"deadline for=~の締切 / just to clarify=確認ですが"},
+{j:"時間がないので、要点だけお話しします。", e:"Since we're short on time, I'll just cover the key points.", t:"前置詞", g:"trn", n:"short on time=時間が足りない / cover=(内容を)扱う"},
+{j:"この点については別の見方をしています。", e:"I have a different view on this point.", t:"前置詞・冠詞", g:"trn", n:"view on=~についての見方 / a different view(aを忘れずに)"},
+{j:"質問は途中でしてもいいですか、それとも最後まで待つべきですか?", e:"Is it okay to ask questions as we go, or should we wait until the end?", t:"研修定型", g:"trn", n:"as we go=進行しながら / until the end=最後まで"}
 ];
 
 /* ================= 基本ヘルパー ================= */
@@ -556,7 +611,10 @@ function saveDBank(b){localStorage.setItem("mec_dbank",JSON.stringify(b));}
 /* レベル別の出題プール */
 const LV_NAME={1:"やさしめ",2:"標準",3:"チャレンジ"};
 function dictLevel(){return localStorage.getItem("mec_dlevel")||"std";}
-function workPref(){return localStorage.getItem("mec_work")==="1";}
+const GENRE_NAME={work:"仕事",trn:"研修"};
+function prefGenre(){const v=localStorage.getItem("mec_work");return v==="1"?"work":v==="trn"?"trn":null;}
+function workPref(){return !!prefGenre();}
+function genreTag(g){return g&&GENRE_NAME[g]?" / "+GENRE_NAME[g]:"";}
 function dictPool(){
   const lv=dictLevel();
   const allow=lv==="easy"?[1]:lv==="std"?[1,2]:lv==="hard"?[3]:[1,2,3];
@@ -568,8 +626,8 @@ function newProg(){
   const carry=getBank().slice(0,3);           // 昨日までの×を最大3問、今日の頭に混ぜる
   const list=[...carry];
   const dn=dayNum(); let i=0;
-  if(workPref()){                             // 仕事関連を優先: 最大5問を先に確保
-    const wq=[]; Q.forEach((q,ix)=>{if(q.g==="work")wq.push(ix);});
+  if(workPref()){                             // 優先ジャンルの問題を最大5問先に確保
+    const wq=[]; Q.forEach((q,ix)=>{if(q.g===prefGenre())wq.push(ix);});
     let k=0;
     const target=Math.min(10, carry.length+5);
     while(wq.length && list.length<target && k<wq.length*2){
@@ -710,7 +768,7 @@ function startDict(){
     }else{
       const pool=dictPool(); let t=0;
       // 仕事関連を優先: 1日3文のうち最初の2文を仕事関連プールから
-      const poolW=workPref()?pool.filter(i=>D[i].g==="work"):[];
+      const poolW=workPref()?pool.filter(i=>D[i].g===prefGenre()):[];
       const usePool=(poolW.length && p.d<2)?poolW:pool;
       do{ idx=usePool[(dayNum()*13+t*7)%usePool.length]; t++; }
       while(p.dhist.includes(idx) && t<500);
@@ -724,7 +782,7 @@ function startDict(){
   dItem=D[idx];
   shCount=0;
   const tagEl=document.getElementById("d-tag");
-  tagEl.textContent=(LV_NAME[dItem.lv]||"")+(dItem.g==="work"?" / 仕事":"")+(isRev?" / 復習":"");
+  tagEl.textContent=(LV_NAME[dItem.lv]||"")+genreTag(dItem.g)+(isRev?" / 復習":"");
   tagEl.className=isRev?"tag rev":"tag";
   document.getElementById("sh-btn").textContent="再生してシャドーイング (0/5)";
   document.getElementById("d-prog").textContent=
@@ -829,7 +887,7 @@ function extendQlist(p){
   const bank=getBank().filter(i=>!used.has(i));
   if(bank.length){p.qlist.push(bank[0]); return;}
   if(workPref()){
-    const wq=[]; Q.forEach((q,ix)=>{if(q.g==="work"&&!used.has(ix))wq.push(ix);});
+    const wq=[]; Q.forEach((q,ix)=>{if(q.g===prefGenre()&&!used.has(ix))wq.push(ix);});
     if(wq.length){p.qlist.push(wq[(dn*7+p.qlist.length)%wq.length]); return;}
   }
   let i=0, idx=(dn*13+p.qlist.length*3)%Q.length;
@@ -847,7 +905,7 @@ function startQT(){
   qItem=Q[idx];
   const isReview=getBank().includes(idx);
   const tagEl=document.getElementById("q-tag");
-  tagEl.textContent=qItem.t+(qItem.g==="work"?" / 仕事":"")+(isReview?" / 復習":"");
+  tagEl.textContent=qItem.t+genreTag(qItem.g)+(isReview?" / 復習":"");
   tagEl.className=isReview?"tag rev":"tag";
   document.getElementById("q-prog").textContent=
     p.q<10?`瞬間英作文 ${p.q+1} / 10`:`瞬間英作文 おかわり ${p.q-9}問目`;
@@ -991,7 +1049,7 @@ function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.ran
 /* キュー: 復習バンク → 学習済み(シャッフル)。少ないうちは現在レベルの文で補う */
 function workFirst(arr){
   if(!workPref()) return arr;
-  const w=arr.filter(e=>{const d=D.find(x=>x.e===e);return d&&d.g==="work";});
+  const w=arr.filter(e=>{const d=D.find(x=>x.e===e);return d&&d.g===prefGenre();});
   return [...w,...arr.filter(e=>!w.includes(e))];
 }
 /* prevLast: 直前に流れた文。周をまたいで同じ文が連続しないようにする */
@@ -1042,7 +1100,7 @@ async function listenLoop(sid){
     if(!item){lsPos++; continue;}
     const isRev=getDBank().includes(item.e);
     const tagEl=document.getElementById("l-tag");
-    tagEl.textContent=(LV_NAME[item.lv]||"")+(item.g==="work"?" / 仕事":"")+(isRev?" / 復習":"");
+    tagEl.textContent=(LV_NAME[item.lv]||"")+genreTag(item.g)+(isRev?" / 復習":"");
     tagEl.className=isRev?"tag rev":"tag";
     document.getElementById("l-prog").textContent="ながら聞き — "+(listenTotal()+1)+"文目";
     const pat=document.getElementById("lp-pat").value;
@@ -1221,7 +1279,7 @@ function breakScreen(title, sub, btns, miss){
   sel.value=dictLevel();
   sel.onchange=()=>{localStorage.setItem("mec_dlevel",sel.value); resetPick();};
   const ws=document.getElementById("work-sel");
-  ws.value=workPref()?"1":"0";
+  ws.value=localStorage.getItem("mec_work")||"0";
   ws.onchange=()=>{localStorage.setItem("mec_work",ws.value); resetPick();};
 })();
 loadStreak();
